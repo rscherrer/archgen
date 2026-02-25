@@ -1,0 +1,6 @@
+{
+  "name": "genarcher",
+  "dependencies": [
+    "boost-test"
+  ]
+}

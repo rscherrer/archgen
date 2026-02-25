@@ -1,0 +1,33 @@
+## List of parameters
+
+Here we provide an explanation of the various parameters of the model (passed though a parameter file, e.g. `parameters.txt`), as well as their default value when no parameter file is supplied, and their valid ranges. For more information, please refer to the source code or the scientific manuscript accompanying this project (link will be made available once published).
+
+Note that hereafter, "positive" means ***including zero***, while "strictly positive" means ***excluding zero***. Also note that missing parameters in the parameter file will take their default value.
+
+| Parameter name | Default value(s) | Accepted values | No. values | Description | Notes |
+|--|--|--|--|--|--|
+| `poopsize` | `10` | Strictly positive integers | 1 | Number of individuals in the population | |
+| `nloci` | `10` | Strictly positive integers | 1 | Number of loci in the genome | |
+| `nedges` | `0` | Positive integers | 1 | Number of edges across the gene networks of all traits | |
+| `ntraits` | `1` | Strictly positive integers | 1 | Number of traits in the model | |
+| `allfreq` | `0` | Decimals from zero to one | 1 | Initial frequency of the 1-allele across all loci | |
+| `effect` | `0` | Positive decimals | 1 | Standard deviation of the distribution of additive effect sizes across loci | Only used if the genetic architecture must be generated, see [here](ARCHITECTURE.md) | |
+| `weight` | `0` | Positive decimals | 1 | Standard deviation of the distribution of weights across edges | Only used if the genetic architecture must be generated, see [here](ARCHITECTURE.md) | |
+|  `nlocipertrait` | `10` | Strictly positive integers | `ntraits` | Number of loci affecting each trait | Should sum up to `nloci` |
+| `nedgespertrait` | `0` | Positive integers | `ntraits` | Number of edges in the gene network of each trait | Should sum up to `nedges` (a trait may have zero edges) |
+| `skews` | `1` | Positive decimals | `ntraits` | Skewness of the distribution of effect sizes across loci for each trait | Only used if the genetic architecture must be generated, see [here](ARCHITECTURE.md) | |
+| `epistasis` | `0` | Decimals from zero to one | `ntraits` | Scaling parameter for contribution of epistatic interactions relative to additive effect sizes | Unlike the other scaling parameters, this one must be a proportion |
+| `dominance` | `0` | Positive decimals | `ntraits` | Scaling parameter for contribution of dominance effects | Standard deviation of the normal distribution dominance deviations are sampled from for each trait |
+| `envnoise` | `0` | Positive decimals | `ntraits` | Scaling parameter for contribution of environmental effects | Standard deviation of the normal distribution environmental deviations are sampled from for each trait |
+| `sampling` | `0` | Positive integers between 0 and 4 | 1 | Type of algorithm used for sampling mutations | If `0`, the requested `allfreq` is taken as given and that (nearly) exact number of mutations will be thrown across the genome. If `1`, mutations are sampled through Bernoulli sampling. If `2`, the number of mutations is sampled from a binomial distribution and mutations are scattered randomly. If `3`, the position of the next mutation is sampled from a geometric distribution. See [here](MUTATIONS.md) for details. |
+| `ratio` | `0.25` | Decimals from zero to one | 1 | Frequency of 1-alleles below which the shuffle algorithm is only partial in the mutation-sampling step | Only used when `sampling` is `0` (given) or `2` (binomial, see [here](MUTATIONS.md) for details). This is for efficiency and probably does not need to be changed. |
+| `seed` | Clock-generated | Positive integers | 1 | Seed of the pseudo-random number generator | The clock is used to generate a pseudo-random seed. Make sure to set `savepars` to `1` to be able to retrieve the generated seed and reproduce a given simulation. |
+| `loadarch` | `0` | One or zero | 1 | Whether or not to load the genetic architecture from a file called `architecture.txt` in the working directory | If set to `1`, the program will read the `architecture.txt` file in the working directory to load the genetic architecture. See [here](ARCHITECTURE.md) for details on how to format the `architecture.txt` file. Also note that loading an architecture will override some of the relevant general parameters such as `nloci` or `nedges` (these can will feature in the output `paramlog.txt`, see below) |
+| `savearch` | `1` | One or zero | 1 | Whether or not to save the genetic architecture into a file called `architecture.txt` in the working directory | If set to `1`, the program will override any `architecture.txt` in the working directory. See [here](ARCHITECTURE.md) for details on how this file is formatted |
+| `savepars` | `1` | One or zero | 1 | Whether or not to save the parameters into a parameter log file called `paramlog.txt` | If set to `1`, the parameters will be saved in a file called `paramlog.txt` in the working directory |
+| `binary` | `0` | One or zero | 1 | Whether or not to save the allele matrix output data in binary format | If set to `1`, the output data will be saved in binary format (`alleles.dat`), which is more compact and faster to write, but less human-readable. If set to `0`, the output data will be saved in text format (`alleles.csv`), which is more human-readable but also takes more space. |
+| `verbose` | `1` | One or zero | 1 | Whether or not to display progress at each time step to the screen | If set to `1`, the program will display the current time step and the number of individuals in the population at each time step |
+
+Please note that the program will read `ntraits` values for the following parameters: `nlocipertrait`, `nedgespertrait`, `skews`, `epistasis`, `dominance` and `envnoise`. Therefore, `ntraits` should be supplied before these parameters in the parameter file. Please also make sure that the parameters are internally consistent (e.g. `nlocipertrait` should sum up to `nloci`, and `nedgespertrait` should sum up to `nedges`).
+
+If a genetic architecture is loaded from a file (`loadarch` is `1`; see [here](ARCHITECTURE.md)), make sure that parameters `epistasis`, `dominance` and `envnoise` have the right number of values (`ntraits` as given in the architecture file), otherwise the program will error. Other parameters that take `ntraits` values will either be automatically updated (e.g. `nlocipertrait` and `nedgespertrait`) or ignored if only used to generate a new architecture (e.g. `skews`).

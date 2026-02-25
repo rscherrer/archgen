@@ -1,4 +1,4 @@
-# archgen
+# ArchGen: Simple Genetic Architecture and Quantitative Genetic Data Simulator 
 
 This is the source code for a simple simulator of alleles and trait values in a population, for use in quantitative genetics method testing and benchmarking.
 

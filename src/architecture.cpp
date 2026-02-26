@@ -22,9 +22,12 @@ Architecture::Architecture(const std::string& archfile) :
 {
 
     // archfile: (optional) name of the file to read from
+
+    // Note: Keep the default to no edges, so that the user can stick to
+    // that by not supplying any in the architecture file.
     
     // Either read of generate an architecture
-    if (archfile.empty()) read(archfile);
+    if (archfile != "") read(archfile);
 
     // Check
     check();
@@ -74,6 +77,10 @@ void Architecture::read(const std::string& filename) {
         else
             reader.readerror();
 
+        // Note: Edge-specific parameters may be absent from the architecture file,
+        // which will stand for no edges. All other parameters must be supplied,
+        // and their dimensions must be consistent with the hyperparameters.
+
         // Check that we have reached the end of the line
         assert(reader.iseol());
  
@@ -86,7 +93,19 @@ void Architecture::read(const std::string& filename) {
     reader.close();
 
     // Check more specific features of the parameters
-    if (ntraits > nloci) throw std::runtime_error("Too many traits for the number of loci");
+    if (ntraits > nloci) throw std::runtime_error("Too many traits for the number of loci in file " + filename);
+
+    // Check that all vectors have the right size
+    if (traitids.size() != nloci) throw std::runtime_error("Number of encoded traits does not match number of loci in file " + filename);
+    if (effects.size() != nloci) throw std::runtime_error("Number of effects does not match number of loci in file " + filename);
+    if (dominances.size() != nloci) throw std::runtime_error("Number of dominance effects does not match number of loci in file " + filename);
+    if (from.size() != nedges) throw std::runtime_error("Number of start loci does not match number of edges in file " + filename);
+    if (to.size() != nedges) throw std::runtime_error("Number of end loci does not match number of edges in file " + filename);
+    if (weights.size() != nedges) throw std::runtime_error("Number of interaction weights does not match number of edges in file " + filename);
+
+    // Note: At this point the edge-specific parameters may have been omitted, in
+    // which case they will remain empty. The above makes sure that if one is empty,
+    // they all are.
 
     // Prepare to count numbers of loci and edges per trait
     nlocipertrait.assign(ntraits, 0u);
@@ -97,7 +116,7 @@ void Architecture::read(const std::string& filename) {
 
         // Make sure encoded trait is valid
         if (traitids[i] > ntraits) 
-            throw std::runtime_error("Encoded trait " + std::to_string(traitids[i]) + " of locus " + std::to_string(i) + " is out of bounds");
+            throw std::runtime_error("Encoded trait " + std::to_string(traitids[i]) + " of locus " + std::to_string(i) + " is out of bounds in file " + filename);
 
         // Decrement
         --traitids[i];
@@ -115,15 +134,15 @@ void Architecture::read(const std::string& filename) {
 
         // Check start locus
         if (from[i] > nloci) 
-            throw std::runtime_error("Start locus " + std::to_string(from[i]) + " of edge " + std::to_string(i) + " is out of bounds");
+            throw std::runtime_error("Start locus " + std::to_string(from[i]) + " of edge " + std::to_string(i + 1u) + " is out of bounds in file " + filename);
             
         // Check end locus
         if (to[i] > nloci) 
-            throw std::runtime_error("End locus " + std::to_string(to[i]) + " of edge " + std::to_string(i) + " is out of bounds");
+            throw std::runtime_error("End locus " + std::to_string(to[i]) + " of edge " + std::to_string(i + 1u) + " is out of bounds in file " + filename);
             
         // Check that they are different
         if (from[i] == to[i]) 
-            throw std::runtime_error("Start and end loci of edge " + std::to_string(i) + " are the same");
+            throw std::runtime_error("Start and end loci of edge " + std::to_string(i + 1u) + " are the same in file " + filename);
 
         // Decrement
         --from[i];
@@ -131,7 +150,7 @@ void Architecture::read(const std::string& filename) {
 
         // Check that they affect the same trait
         if (traitids[from[i]] != traitids[to[i]]) 
-            throw std::runtime_error("Start and end loci of edge " + std::to_string(i) + " affect different traits");
+            throw std::runtime_error("Start and end loci of edge " + std::to_string(i + 1u) + " affect different traits in file " + filename);
        
         // Count the number of edges per trait
         ++nedgespertrait[traitids[from[i]]];
@@ -237,8 +256,8 @@ void Architecture::generate(const Parameters &pars) {
             vfrom.reserve(nedgespertrait[j]);
             vto.reserve(nedgespertrait[j]);
 
-            // Number of edges to add
-            size_t ne = nedgespertrait[j];
+            // Number of edges left to add
+            size_t ne = nedgespertrait[j] - 1u;
 
             // Number of loci still to graft
             size_t nl = nlocipertrait[j] - 2u;
@@ -437,7 +456,7 @@ void Architecture::save(const std::string &filename) const {
     file << "nedges " << nedges << '\n';
     file << "ntraits " << ntraits << '\n';
     file << "traitids";
-    for (size_t x : traitids) file << ' ' << x;
+    for (size_t x : traitids) file << ' ' << x + 1u;
     file << '\n';
     file << "effects";
     for (double x : effects) file << ' ' << x;
@@ -445,15 +464,22 @@ void Architecture::save(const std::string &filename) const {
     file << "dominances";
     for (double x : dominances) file << ' ' << x;
     file << '\n';
-    file << "from";
-    for (size_t x : from) file << ' ' << x;
-    file << '\n';
-    file << "to";
-    for (size_t x : to) file << ' ' << x;
-    file << '\n';
-    file << "weights";
-    for (double x : weights) file << ' ' << x;
-    file << '\n';
+
+    // If edges...
+    if (nedges > 0u) {
+
+        // Write them too
+        file << "from";
+        for (size_t x : from) file << ' ' << x + 1u;
+        file << '\n';
+        file << "to";
+        for (size_t x : to) file << ' ' << x + 1u;
+        file << '\n';
+        file << "weights";
+        for (double x : weights) file << ' ' << x;
+        file << '\n';
+
+    }
 
     // Close the file
     file.close();

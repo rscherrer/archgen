@@ -13,6 +13,7 @@ These are possible small changes for the code as it is now.
 Suggested changes for the documentation.
 
 * Explain how trait values are generated
+* Contribution guidelines?
 
 ### Possible extensions
 

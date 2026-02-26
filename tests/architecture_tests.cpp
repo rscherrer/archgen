@@ -29,11 +29,11 @@ BOOST_AUTO_TEST_CASE(readArchitecture) {
     content << "nloci 5\n";
     content << "nedges 2\n";
     content << "ntraits 2\n";
-    content << "traitids 0 0 1 1 1\n";
+    content << "traitids 1 1 2 2 2\n";
     content << "effects 0.1 0.2 0.3 0.4 0.5\n";
     content << "dominances 0.01 0.02 0.03 0.04 0.05\n";
-    content << "from 0 2\n";
-    content << "to 1 3\n";
+    content << "from 1 3\n";
+    content << "to 2 4\n";
     content << "weights 0.5 0.6\n";
     tst::write("architecture.txt", content.str());
 
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(readInvalidArchitecture) {
     tst::write("architecture.txt", content.str());
 
     // Check
-    tst::checkError([&]() { Architecture arch("architecture.txt"); }, "Unknown parameter name invalid in line 4 of file architecture.txt");
+    tst::checkError([&]() { Architecture arch("architecture.txt"); }, "Invalid parameter: invalid in line 4 of file architecture.txt");
 
     // Remove file
     std::remove("architecture.txt");
@@ -144,7 +144,9 @@ BOOST_AUTO_TEST_CASE(readInvalidTraitIds) {
 
     // Write a file with invalid encoded traits
     tst::write("a1.txt", "nloci 5\nntraits 2\ntraitids 0 0 1 1 2\n");
-    tst::write("a2.txt", "nloci 5\nntraits 2\ntraitids 0 0 1 1 1 1\n");
+    tst::write("a2.txt", "nloci 5\nntraits 2\ntraitids 1 1 2 2 2 2\n");
+
+    // TODO: What if some loci end up encoded by zero traits?
 
     // Check
     tst::checkError([&]() { Architecture arch("a1.txt"); }, "Parameter traitids must be strictly positive in line 3 of file a1.txt");
@@ -189,10 +191,10 @@ BOOST_AUTO_TEST_CASE(readInvalidFrom) {
 
     // Write a file with invalid edge starting locus
     tst::write("a1.txt", "nloci 5\nnedges 2\nfrom 0 5\n");
-    tst::write("a2.txt", "nloci 5\nnedges 2\nfrom 0 1 2\n");
+    tst::write("a2.txt", "nloci 5\nnedges 2\nfrom 1 2 2\n");
 
     // Check
-    tst::checkError([&]() { Architecture arch("a1.txt"); }, "Encoded locus 5 of edge 2 is out of bounds in line 3 of file a1.txt");
+    tst::checkError([&]() { Architecture arch("a1.txt"); }, "Parameter from must be strictly positive in line 3 of file a1.txt");
     tst::checkError([&]() { Architecture arch("a2.txt"); }, "Too many values for parameter from in line 3 of file a2.txt");
 
     // Remove file
@@ -205,11 +207,11 @@ BOOST_AUTO_TEST_CASE(readInvalidFrom) {
 BOOST_AUTO_TEST_CASE(readInvalidTo) {
 
     // Write a file with invalid edge ending locus
-    tst::write("a1.txt", "nloci 5\nnedges 2\nto 1 5\n");
-    tst::write("a2.txt", "nloci 5\nnedges 2\nto 0 1 2\n");
+    tst::write("a1.txt", "nloci 5\nnedges 2\nto 0 5\n");
+    tst::write("a2.txt", "nloci 5\nnedges 2\nto 1 1 2\n");
 
     // Check
-    tst::checkError([&]() { Architecture arch("a1.txt"); }, "Encoded locus 5 of edge 2 is out of bounds in line 3 of file a1.txt");
+    tst::checkError([&]() { Architecture arch("a1.txt"); }, "Parameter to must be strictly positive in line 3 of file a1.txt");
     tst::checkError([&]() { Architecture arch("a2.txt"); }, "Too many values for parameter to in line 3 of file a2.txt");
 
     // Remove file
@@ -236,11 +238,21 @@ BOOST_AUTO_TEST_CASE(readInvalidWeights) {
 BOOST_AUTO_TEST_CASE(readTooManyTraitsGivenLoci)
 {
 
-    // Write a file with more traits than loci
-    tst::write("a1.txt", "nloci 5\nntraits 6\n");
+    // Write architecture file
+    std::ostringstream content;
+    content << "nloci 5\n";
+    content << "nedges 2\n";
+    content << "ntraits 6\n";
+    content << "traitids 1 1 2 2 2\n";
+    content << "effects 0.1 0.2 0.3 0.4 0.5\n";
+    content << "dominances 0.01 0.02 0.03 0.04 0.05\n";
+    content << "from 1 3\n";
+    content << "to 2 4\n";
+    content << "weights 0.5 0.6\n";
+    tst::write("a1.txt", content.str());
 
     // Check
-    tst::checkError([&]() { Architecture arch("a1.txt"); }, "Too many traits for the number of loci in line 2 of file a1.txt");
+    tst::checkError([&]() { Architecture arch("a1.txt"); }, "Too many traits for the number of loci in file a1.txt");
 
     // Remove file
     std::remove("a1.txt");
@@ -251,11 +263,21 @@ BOOST_AUTO_TEST_CASE(readTooManyTraitsGivenLoci)
 BOOST_AUTO_TEST_CASE(readEncodedTraitOutOfBounds)
 {
 
-    // Write a file with an encoded trait that is too large
-    tst::write("a1.txt", "nloci 5\nntraits 2\ntraitids 0 0 1 1 3\n");
+    // Write architecture file
+    std::ostringstream content;
+    content << "nloci 5\n";
+    content << "nedges 2\n";
+    content << "ntraits 2\n";
+    content << "traitids 1 1 2 2 3\n";
+    content << "effects 0.1 0.2 0.3 0.4 0.5\n";
+    content << "dominances 0.01 0.02 0.03 0.04 0.05\n";
+    content << "from 1 3\n";
+    content << "to 2 4\n";
+    content << "weights 0.5 0.6\n";
+    tst::write("a1.txt", content.str());
 
     // Check
-    tst::checkError([&]() { Architecture arch("a1.txt"); }, "Encoded trait 3 of locus 4 is out of bounds in line 3 of file a1.txt");
+    tst::checkError([&]() { Architecture arch("a1.txt"); }, "Encoded trait 3 of locus 4 is out of bounds in file a1.txt");
 
     // Remove file
     std::remove("a1.txt");
@@ -266,11 +288,21 @@ BOOST_AUTO_TEST_CASE(readEncodedTraitOutOfBounds)
 BOOST_AUTO_TEST_CASE(readStartLocusOutOfBounds)
 {
 
-    // Write a file with an edge with a start locus that is too large
-    tst::write("a1.txt", "nloci 5\nnedges 2\nfrom 0 5\n");
+    // Write architecture file
+    std::ostringstream content;
+    content << "nloci 5\n";
+    content << "nedges 2\n";
+    content << "ntraits 2\n";
+    content << "traitids 1 1 2 2 2\n";
+    content << "effects 0.1 0.2 0.3 0.4 0.5\n";
+    content << "dominances 0.01 0.02 0.03 0.04 0.05\n";
+    content << "from 6 3\n";
+    content << "to 2 4\n";
+    content << "weights 0.5 0.6\n";
+    tst::write("a1.txt", content.str());
 
     // Check
-    tst::checkError([&]() { Architecture arch("a1.txt"); }, "Encoded locus 5 of edge 2 is out of bounds in line 3 of file a1.txt");
+    tst::checkError([&]() { Architecture arch("a1.txt"); }, "Start locus 6 of edge 1 is out of bounds in file a1.txt");
 
     // Remove file
     std::remove("a1.txt");
@@ -281,11 +313,21 @@ BOOST_AUTO_TEST_CASE(readStartLocusOutOfBounds)
 BOOST_AUTO_TEST_CASE(readEndLocusOutOfBounds)
 {   
 
-    // Write a file with an edge with an end locus that is too large
-    tst::write("a1.txt", "nloci 5\nnedges 2\nto 1 5\n");
+    // Write architecture file
+    std::ostringstream content;
+    content << "nloci 5\n";
+    content << "nedges 2\n";
+    content << "ntraits 2\n";
+    content << "traitids 1 1 2 2 2\n";
+    content << "effects 0.1 0.2 0.3 0.4 0.5\n";
+    content << "dominances 0.01 0.02 0.03 0.04 0.05\n";
+    content << "from 1 3\n";
+    content << "to 2 6\n";
+    content << "weights 0.5 0.6\n";
+    tst::write("a1.txt", content.str());
 
     // Check
-    tst::checkError([&]() { Architecture arch("a1.txt"); }, "Encoded locus 5 of edge 2 is out of bounds in line 3 of file a1.txt");
+    tst::checkError([&]() { Architecture arch("a1.txt"); }, "End locus 6 of edge 2 is out of bounds in file a1.txt");
 
     // Remove file
     std::remove("a1.txt");
@@ -296,11 +338,21 @@ BOOST_AUTO_TEST_CASE(readEndLocusOutOfBounds)
 BOOST_AUTO_TEST_CASE(readSameStartEndLocus)
 {
 
-    // Write a file with an edge with the same start and end locus
-    tst::write("a1.txt", "nloci 5\nnedges 2\nfrom 0 1\nto 0 3\n");
+    // Write architecture file
+    std::ostringstream content;
+    content << "nloci 5\n";
+    content << "nedges 2\n";
+    content << "ntraits 2\n";
+    content << "traitids 1 1 2 2 2\n";
+    content << "effects 0.1 0.2 0.3 0.4 0.5\n";
+    content << "dominances 0.01 0.02 0.03 0.04 0.05\n";
+    content << "from 1 3\n";
+    content << "to 1 4\n";
+    content << "weights 0.5 0.6\n";
+    tst::write("a1.txt", content.str());
 
     // Check
-    tst::checkError([&]() { Architecture arch("a1.txt"); }, "Start and end loci of edge 1 are the same in line 4 of file a1.txt");
+    tst::checkError([&]() { Architecture arch("a1.txt"); }, "Start and end loci of edge 1 are the same in file a1.txt");
 
     // Remove file
     std::remove("a1.txt");
@@ -310,12 +362,22 @@ BOOST_AUTO_TEST_CASE(readSameStartEndLocus)
 // Test that error when start and end loci affect different traits
 BOOST_AUTO_TEST_CASE(readDifferentTraitLoci)
 {
-
-    // Write a file with an edge with start and end loci affecting different traits
-    tst::write("a1.txt", "nloci 5\nntraits 2\ntraitids 0 0 1 1 1\nnedges 2\nfrom 0 2\nto 1 3\n");
+    
+    // Write architecture file
+    std::ostringstream content;
+    content << "nloci 5\n";
+    content << "nedges 2\n";
+    content << "ntraits 2\n";
+    content << "traitids 1 1 2 2 2\n";
+    content << "effects 0.1 0.2 0.3 0.4 0.5\n";
+    content << "dominances 0.01 0.02 0.03 0.04 0.05\n";
+    content << "from 1 1\n";
+    content << "to 2 4\n";
+    content << "weights 0.5 0.6\n";
+    tst::write("a1.txt", content.str());
 
     // Check
-    tst::checkError([&]() { Architecture arch("a1.txt"); }, "Start and end loci of edge 1 affect different traits in line 4 of file a1.txt");
+    tst::checkError([&]() { Architecture arch("a1.txt"); }, "Start and end loci of edge 2 affect different traits in file a1.txt");
 
     // Remove file
     std::remove("a1.txt");
@@ -396,6 +458,9 @@ BOOST_AUTO_TEST_CASE(generateArchitecture) {
     pars.nlocipertrait = {100u, 100u};
     pars.nedgespertrait = {100u, 100u};
     pars.skews = {0.5, 1.0};
+
+    // Update internal parameters
+    pars.update();
 
     // Generate architecture
     Architecture arch;

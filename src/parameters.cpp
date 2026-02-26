@@ -23,8 +23,8 @@ Parameters::Parameters(const std::string& filename) :
     effect(0.0),
     weight(0.0),
     ntraits(1u),
-    nlocipertrait(ntraits, nloci),
-    nedgespertrait(ntraits, nedges),
+    nlocipertrait(ntraits, 10u),
+    nedgespertrait(ntraits, 0u),
     skews(ntraits, 1.0),
     epistasis(ntraits, 0.0),
     dominance(ntraits, 0.0),
@@ -142,7 +142,7 @@ void Parameters::read(const std::string &filename) {
 
          // Check that fewer edges than a full graph allows
         if (nedgespertrait[i] > (nlocipertrait[i] * (nlocipertrait[i] - 1u)) / 2u) 
-            throw std::runtime_error("Too many edges for the number of loci for trait " + std::to_string(i + 1u));
+            throw std::runtime_error("Too many edges for the number of loci for trait " + std::to_string(i + 1u) + " in file " + filename);
 
         // Note: This does not guarantee that all edges will be made. See the implementation
         // the genetic architecture for more details.

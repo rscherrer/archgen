@@ -93,6 +93,7 @@ BOOST_AUTO_TEST_CASE(useCaseWithArchitectureLoading) {
 
     // Rerun the simulation with the same architecture
     tst::write("parameters.txt", "loadarch 1");
+    doMain({"program", "parameters.txt"});
     BOOST_CHECK_NO_THROW(doMain({"program", "parameters.txt"}));
 
     // Cleanup

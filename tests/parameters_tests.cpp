@@ -27,8 +27,6 @@ BOOST_AUTO_TEST_CASE(readParameters)
 
     // Add lines
     content << "popsize 10\n";
-    content << "nloci 20\n";
-    content << "nedges 5\n";
     content << "ntraits 3\n";
     content << "allfreq 0.1\n";
     content << "effect 0.5\n";
@@ -56,8 +54,6 @@ BOOST_AUTO_TEST_CASE(readParameters)
 
     // Check that the parameters have been updated
     BOOST_CHECK_EQUAL(pars.popsize, 10u);
-    BOOST_CHECK_EQUAL(pars.nloci, 20u);
-    BOOST_CHECK_EQUAL(pars.nedges, 5u);
     BOOST_CHECK_EQUAL(pars.ntraits, 3u);
     BOOST_CHECK_EQUAL(pars.allfreq, 0.1);
     BOOST_CHECK_EQUAL(pars.effect, 0.5);
@@ -261,7 +257,7 @@ BOOST_AUTO_TEST_CASE(readInvalidEpistasis)
 
     // Write a file with invalid interaction importance scaling parameters
     tst::write("p1.txt", "ntraits 3\nepistasis 0.1 -0.2 0.3\n");
-    tst::write("p2.txt", "ntraits 3\nepistasis 0.1 0.2 0.3 1.1\n");
+    tst::write("p2.txt", "ntraits 3\nepistasis 0.1 0.2 1.1\n");
     tst::write("p3.txt", "ntraits 3\nepistasis 0.1 0.2 0.3 0.4\n");
 
     // Check
@@ -360,7 +356,7 @@ BOOST_AUTO_TEST_CASE(readInvalidSeed)
     tst::write("p2.txt", "seed 10 10\n");
 
     // Check
-    tst::checkError([&]() { Parameters pars("p1.txt"); }, "Parameter seed must be non-negative in line 1 of file p1.txt");
+    tst::checkError([&]() { Parameters pars("p1.txt"); }, "Invalid value type for parameter seed in line 1 of file p1.txt");
     tst::checkError([&]() { Parameters pars("p2.txt"); }, "Too many values for parameter seed in line 1 of file p2.txt");
 
     // Remove files
@@ -375,10 +371,10 @@ BOOST_AUTO_TEST_CASE(readInvalidLoadArch)
 
     // Write a file with invalid architecture loading flag
     tst::write("p1.txt", "loadarch -1\n");
-    tst::write("p2.txt", "loadarch 10 10\n");
+    tst::write("p2.txt", "loadarch 1 1\n");
 
     // Check
-    tst::checkError([&]() { Parameters pars("p1.txt"); }, "Parameter loadarch must be 0 or 1 in line 1 of file p1.txt");
+    tst::checkError([&]() { Parameters pars("p1.txt"); }, "Invalid value type for parameter loadarch in line 1 of file p1.txt");
     tst::checkError([&]() { Parameters pars("p2.txt"); }, "Too many values for parameter loadarch in line 1 of file p2.txt");
 
     // Remove files
@@ -393,10 +389,10 @@ BOOST_AUTO_TEST_CASE(readInvalidSaveArch)
 
     // Write a file with invalid architecture saving flag
     tst::write("p1.txt", "savearch -1\n");
-    tst::write("p2.txt", "savearch 10 10\n");
+    tst::write("p2.txt", "savearch 1 1\n");
 
     // Check
-    tst::checkError([&]() { Parameters pars("p1.txt"); }, "Parameter savearch must be 0 or 1 in line 1 of file p1.txt");
+    tst::checkError([&]() { Parameters pars("p1.txt"); }, "Invalid value type for parameter savearch in line 1 of file p1.txt");
     tst::checkError([&]() { Parameters pars("p2.txt"); }, "Too many values for parameter savearch in line 1 of file p2.txt");
 
     // Remove files
@@ -411,10 +407,10 @@ BOOST_AUTO_TEST_CASE(readInvalidSavePars)
 
     // Write a file with invalid parameters saving flag
     tst::write("p1.txt", "savepars -1\n");
-    tst::write("p2.txt", "savepars 10 10\n");
+    tst::write("p2.txt", "savepars 1 1\n");
 
     // Check
-    tst::checkError([&]() { Parameters pars("p1.txt"); }, "Parameter savepars must be 0 or 1 in line 1 of file p1.txt");
+    tst::checkError([&]() { Parameters pars("p1.txt"); }, "Invalid value type for parameter savepars in line 1 of file p1.txt");
     tst::checkError([&]() { Parameters pars("p2.txt"); }, "Too many values for parameter savepars in line 1 of file p2.txt");
 
     // Remove files
@@ -429,10 +425,10 @@ BOOST_AUTO_TEST_CASE(readInvalidBinary)
 
     // Write a file with invalid binary saving flag
     tst::write("p1.txt", "binary -1\n");
-    tst::write("p2.txt", "binary 10 10\n");
+    tst::write("p2.txt", "binary 1 1\n");
 
     // Check
-    tst::checkError([&]() { Parameters pars("p1.txt"); }, "Parameter binary must be 0 or 1 in line 1 of file p1.txt");
+    tst::checkError([&]() { Parameters pars("p1.txt"); }, "Invalid value type for parameter binary in line 1 of file p1.txt");
     tst::checkError([&]() { Parameters pars("p2.txt"); }, "Too many values for parameter binary in line 1 of file p2.txt");
 
     // Remove files
@@ -447,10 +443,10 @@ BOOST_AUTO_TEST_CASE(readInvalidVerbose)
 
     // Write a file with invalid verbosity flag
     tst::write("p1.txt", "verbose -1\n");
-    tst::write("p2.txt", "verbose 10 10\n");
+    tst::write("p2.txt", "verbose 1 1\n");
 
     // Check
-    tst::checkError([&]() { Parameters pars("p1.txt"); }, "Parameter verbose must be 0 or 1 in line 1 of file p1.txt");
+    tst::checkError([&]() { Parameters pars("p1.txt"); }, "Invalid value type for parameter verbose in line 1 of file p1.txt");
     tst::checkError([&]() { Parameters pars("p2.txt"); }, "Too many values for parameter verbose in line 1 of file p2.txt");
 
     // Remove files
@@ -467,7 +463,7 @@ BOOST_AUTO_TEST_CASE(readTooManyEdgesGivenLoci)
     tst::write("p1.txt", "ntraits 3\nnlocipertrait 3 3 3\nnedgespertrait 5 0 0\nskews 1 1 1\nepistasis 1 1 1\ndominance 1 1 1\nenvnoise 1 1 1\n");
 
     // Check error
-    tst::checkError([&]() { Parameters pars("p1.txt"); }, "Too many edges for trait 1 given the number of loci in line 2 of file p1.txt");
+    tst::checkError([&]() { Parameters pars("p1.txt"); }, "Too many edges for the number of loci for trait 1 in file p1.txt");
 
     // Remove files
     std::remove("p1.txt");

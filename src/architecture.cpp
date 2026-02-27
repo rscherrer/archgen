@@ -188,12 +188,10 @@ void Architecture::generate(const Parameters &pars) {
     to.resize(0u);
     weights.resize(0u);
 
-    // Reserve locus-wise vectors
-    traitids.reserve(0u);
+    // Reserve memory
+    traitids.reserve(nloci);
     effects.reserve(nloci);
     dominances.reserve(nloci);
-
-    // Reserve edge-wise vectors
     from.reserve(nedges);
     to.reserve(nedges);
     weights.reserve(nedges);
@@ -204,11 +202,22 @@ void Architecture::generate(const Parameters &pars) {
     // Counter
     size_t trait = 0u;
 
+    // Tracker for the next trait
+    size_t nextn = nlocipertrait[trait];
+
     // For each locus...
     for (size_t i = 0u; i < nloci; ++i) {
 
-        // Update trait conter
-        if (i > 0u && i % nlocipertrait[trait] == 0u) ++trait;
+        // Update trait counter
+        if (i == nextn) {
+
+            // Move to next trait
+            ++trait;
+
+            // Update trait tracker
+            nextn += nlocipertrait[trait];
+
+        }
 
         // Trait affected by the locus
         traitids.push_back(trait);
@@ -227,148 +236,167 @@ void Architecture::generate(const Parameters &pars) {
     // Shuffle encoded traits randomly
     std::shuffle(traitids.begin(), traitids.end(), rnd::rng);
 
-    // If there are edges to add...
-    if (nedges > 0u) {
+    // Prepare to store indices of the loci affecting each trait
+    std::vector<std::vector<size_t> > indices(ntraits);
 
-        // Note: This section implements a preferential attachment 
-        // algorithm by Barabasi and Albert (1999).
+    // Note: These will be useful later.
+    
+    // Reserve memory
+    for (size_t j = 0u; j < ntraits; ++j) 
+        indices[j].reserve(nlocipertrait[j]);
 
-        // For each trait...
-        for (size_t j = 0u; j < ntraits; ++j) {
+    // Collect indices for each trait
+    for (size_t i = 0u; i < nloci; ++i) {
+        indices[traitids[i]].push_back(i);
+    }
 
-            // Skip if no edges affect the trait
-            if (nedgespertrait[j] == 0u) continue;
+    // Note: What follows implements a modified version of the Barabasi-Albert 
+    // preferential attachment algorithm. In this version the number of
+    // connections made by each new vertex is not fixed but randomly sampled, so
+    // that the mean degree at the end is the number of edges divided by the number
+    // of vertices in each network.
 
-            // Initialize vertex connections
-            std::vector<size_t> vfrom({0u});
-            std::vector<size_t> vto({1u});
+    // For each trait...
+    for (size_t j = 0u; j < ntraits; ++j) {
 
-            // Note: This connects vertex 0 to vertex 1.
+        // Useful numbers
+        const size_t nL = nlocipertrait[j];
+        const size_t nE = nedgespertrait[j];
+        const double skew = pars.skews[j];
 
-            // Initialize vector of degrees
-            std::vector<size_t> degrees(nlocipertrait[j], 0u);
+        // Skip if no edges affect the trait
+        if (nE == 0u) continue;
 
-            // Update degrees with first connection
-            ++degrees[0u];
-            ++degrees[1u];
+         // Check
+        assert(nL > 1u);
+        assert(nE >= nL - 1u);
+        assert(nE <= nL * (nL - 1u) / 2u);
 
-            // Reserve memory
-            vfrom.reserve(nedgespertrait[j]);
-            vto.reserve(nedgespertrait[j]);
+        // First connection
+        from.push_back(indices[j][0u]);
+        to.push_back(indices[j][1u]);
 
-            // Number of edges left to add
-            size_t ne = nedgespertrait[j] - 1u;
+        // Note: This connects vertex 0 to vertex 1.
 
-            // Number of loci still to graft
-            size_t nl = nlocipertrait[j] - 2u;
+        // Sample first interaction weight
+        weights.push_back(getnormal(rnd::rng) * pars.weight);
 
-            // For each remaining vertex...
-            for (size_t i = 2u; i < nlocipertrait[j]; ++i) {
+        // Initialize vector of degrees across vertices
+        std::vector<size_t> degrees(nL, 0u);
 
-                // Is it the last?
-                const bool islast = i == nlocipertrait[j] - 1u;
+        // Update degrees with first connection
+        ++degrees[0u];
+        ++degrees[1u];
 
-                // Sample a number of connections to make or make them all if last
-                const size_t n = islast ? ne : rnd::binomial(ne, 1.0 / nl)(rnd::rng);
+        // Initialize a vector of partnering probabilities
+        std::vector<double> probs(2u, 1.0);
 
-                // Note: This makes sure that the network is connected. No nodes
-                // should be left unattached.
+        // Note: The probability is to the power determined by the
+        // skewness parameter but it remains one for now because
+        // degrees of the two first vertices are one.
 
-                // Initialize a vector of probabilities
-                std::vector<double> probs(i, 0.0);
+        // All other vertices get probability zero for now
+        probs.resize(nL);
 
-                // Note: Only vertices already attached are counted.
+        // Number of edges left to add
+        size_t ne = nE - 1u;
 
-                // Compute attachment probabilities
-                for (size_t k = 0u; k < probs.size(); ++k)
-                    probs[k] = pars.skews[j] == 1.0 ? degrees[k] : pow(degrees[k], pars.skews[j]);
+        // Number of loci still to graft
+        size_t nl = nL - 2u;
 
-                // Note: Probabilities are proportional to the degree of the vertex
-                // to a certain power, which will determines the skewness of the degree
-                // distribution. However, the pow() function is very slow, so we try
-                // to avoid it if the skewness is 1.0, which is a common case.
+        // For each remaining vertex...
+        for (size_t i = 2u; i < nL; ++i) {
 
-                // For each connection to make...
-                for (size_t e = 0u; e < n; ++e) {
+            // Number of edges to spare
+            const size_t nspare = ne - nl;
 
-                    // Sample a vertex to connect to
-                    const size_t v = rnd::discrete(probs.cbegin(), probs.cend())(rnd::rng);
+            // Note: One edge will be made for sure, but there may be more, and the number
+            // of extra edges depends on how many edges we have to spare (we are reserving
+            // at least one for each vertex still to come to make sure the network is connected).
 
-                    // Check
-                    assert(v < i);
+            // Sample a number of connections to make or make them all if last
+            size_t n = nl == 0u ? ne : 1u + rnd::binomial(nspare, 1.0 / nl)(rnd::rng);
 
-                    // Add the connection
-                    vfrom.push_back(v);
-                    vto.push_back(i);
+            // Note: This sampling makes the expected number of connections made by each
+            // vertex increase as we loop through vertices (contrary to the classic
+            // Barabasi-Albert algorithm where that number is fixed). The last vertex
+            // makes all the remaining edges.
 
-                    // Update degrees
-                    ++degrees[v];
-                    ++degrees[i];
-
-                    // Update probabilities to avoid sampling the same vertex again
-                    probs[v] = 0.0;
-
-                }
-
-                // Update number of edges and loci still to graft
-                ne -= n;
-                --nl;
-
-            }
-
-            // Check
-            assert(vfrom.size() <= vfrom.capacity());
-
-            // Error if needed
-            if (vfrom.size() < vfrom.capacity())
-                throw std::runtime_error("Not enough edges could be made for trait " + std::to_string(j));
-
-            // Note: This is because by construction this algorithm cannot
-            // guarantee that the requested number of edges will be reached.
-            // This error may trigger if the number of edges is very high.
+            // Cap the number of connections if not enough partners
+            n = (n > i) ? i : n;
 
             // Check
-            assert(ne == 0u);
-            assert(vfrom.size() == vto.size());
+            assert(n > 0u);
+            assert(n <= i);
 
-            // Prepare to store indices of the loci affecting the current trait
-            std::vector<size_t> loci(nlocipertrait[j]);
+            // Vector of probabilities from the point of view of the current vertex
+            std::vector<double> iprobs(probs.begin(), probs.begin() + i);
 
-            // For each locus...
-            for (size_t i = 0u, k = 0u; i < nloci; ++i) {
+            // Note: This one will be updated to avoid connecting the current
+            // vertex to the same partner twice. We also just need the probabilities
+            // the vertices already attached; the rest have zero probability.
 
-                // Skip if not coding the right trait
-                if (traitids[i] != j) continue;
+            // Flag for whether no sampling needed
+            const bool nosample = (n == i);
 
-                // Otherwise record
-                loci[k] = i;
+            // For each connection to make...
+            while (n > 0u) {
 
-                // Increment
-                ++k;
+                // Sample a vertex to connect to
+                const size_t v = nosample ? i - 1u : rnd::discrete(iprobs.cbegin(), iprobs.cend())(rnd::rng);
 
-            }
+                // Note: This make sure that we avoid expensive sampling in case
+                // we should anyway connect to all the vertices that came before.
 
-            // While edges to store...
-            while (!vfrom.empty()) {
+                // Check
+                assert(v < i);
 
-                // Store
-                from.push_back(loci[vfrom.back()]);
-                to.push_back(loci[vto.back()]);
+                // Add the connection
+                from.push_back(indices[j][i]);
+                to.push_back(indices[j][v]);
 
-                // Delete
-                vfrom.pop_back();
-                vto.pop_back();
+                // Update degrees
+                ++degrees[i];
+                ++degrees[v];
 
-                // Sample interaction weight while we are at it
+                // Update probabilities to avoid sampling the same vertex again
+                iprobs[v] = 0.0;
+
+                // Update external probability of the partner vertex               
+                probs[v] = skew == 1.0 ? degrees[v] : pow(degrees[v], skew);
+
+                // Note: We try to avoid regenerating entire vectors of probabilities
+                // too often because the power function is expensive. Here the fast
+                // special case when skewness is one.
+
+                // Sample an interaction weight
                 weights.push_back(getnormal(rnd::rng) * pars.weight);
 
+                // Decrement the number of connections left to make
+                --n;
+                --ne;
+
             }
 
-            // Check
-            assert(vfrom.empty());
-            assert(vto.empty());
+            // Update external probability of the focal vertex
+            probs[i] = skew == 1.0 ? degrees[i] : pow(degrees[i], skew);
+
+            // Update number of vertices yet to graft
+            --nl;
 
         }
+
+        // Error if needed
+        if (ne > 0u)
+            throw std::runtime_error("Not all requested edges could be made for trait " + std::to_string(j + 1u) + " with the given parameters");
+
+        // Note: This is because by construction this algorithm cannot
+        // guarantee that the requested number of edges will be reached.
+        // This error may trigger if the number of edges is very high.
+        
+        // Check
+        assert(ne == 0u);
+
     }
     
     // Check
@@ -419,11 +447,18 @@ void Architecture::check() const {
     // Note: By now any user-supplied indices have been decremented
     // to match the zero-based indexing of C++. 
 
+    // Prepare to verify number of loci and edges for each trait
+    std::vector<size_t> nl(ntraits, 0u);
+    std::vector<size_t> ne(ntraits, 0u);
+
     // For each locus...
     for (size_t i = 0u; i < nloci; ++i) {
 
         // Check
         assert(traitids[i] < ntraits);
+
+        // Count
+        ++nl[traitids[i]];
 
     }
 
@@ -435,6 +470,18 @@ void Architecture::check() const {
         assert(to[i] < nloci);
         assert(from[i] != to[i]);
         assert(traitids[from[i]] == traitids[to[i]]);
+
+        // Count
+        ++ne[traitids[from[i]]];
+
+    }
+
+    // For each trait...
+    for (size_t i = 0u; i < ntraits; ++i) {
+
+        // Check
+        assert(nl[i] == nlocipertrait[i]);
+        assert(ne[i] == nedgespertrait[i]);
 
     }
 }

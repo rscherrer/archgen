@@ -12,7 +12,7 @@
 #include <fstream>
 
 // Function to throw mutations into the matrix of alleles
-void mutate(std::vector<std::bitset<64u> > &alleles, const double &mu, const size_t &N, const size_t &imode, const double &ratio) {
+void gen::mutate(std::vector<std::bitset<64u> > &alleles, const double &mu, const size_t &N, const size_t &imode, const double &ratio) {
 
     // alleles: vector of bitsets representing matrix of alleles
     // mu: mutation rate
@@ -25,8 +25,13 @@ void mutate(std::vector<std::bitset<64u> > &alleles, const double &mu, const siz
     if (imode == 1u) mode = "bernoulli";
     else if (imode == 2u) mode = "binomial";
     else if (imode == 3u) mode = "geometric";
-    else if (imode == 0u) mode = "given";
-    else throw std::runtime_error("Invalid sampling mode");
+    else {
+
+        // Default
+        assert(imode == 0u);
+        mode = "given";
+
+    }
 
     // Note: We only convert for readability.
 
@@ -131,6 +136,9 @@ void mutate(std::vector<std::bitset<64u> > &alleles, const double &mu, const siz
             
             // Note: We will flip some back later.
 
+            // Take the complement of the number of mutations to sample
+            nmut = N - nmut;
+
         }
 
         // Create consecutive indices
@@ -138,7 +146,10 @@ void mutate(std::vector<std::bitset<64u> > &alleles, const double &mu, const siz
         std::iota(indices.begin(), indices.end(), 0u);
 
         // If density is high enough...
-        if (nmut / N > ratio) {
+        if (1.0 * nmut / N > ratio) {
+
+            // Note: Make sure not to perform integer division when
+            // checking this condition.
 
             // Full shuffle
             shuffle(indices.begin(), indices.end(), rnd::rng);
@@ -172,7 +183,7 @@ void mutate(std::vector<std::bitset<64u> > &alleles, const double &mu, const siz
 }
 
 // Function to convert the matrix of alleles into a vector of trait values
-std::vector<double> develop(const std::vector<std::bitset<64u> > &alleles, const Parameters &pars, const Architecture &arch, const size_t &N) {
+std::vector<double> gen::develop(const std::vector<std::bitset<64u> > &alleles, const Parameters &pars, const Architecture &arch, const size_t &N) {
 
     // alleles: vector of bitsets representing matrix of alleles
     // pars: general hyperparameters
@@ -267,7 +278,7 @@ std::vector<double> develop(const std::vector<std::bitset<64u> > &alleles, const
     }
 
     // Prepare an environmental noise generator
-    rnd::normal envnoise(0.0, 1.0);
+    rnd::normal getnormal(0.0, 1.0);
 
     // For each trait value in each individual...
     for (size_t i = 0u; i < ttraits; ++i) {
@@ -276,7 +287,7 @@ std::vector<double> develop(const std::vector<std::bitset<64u> > &alleles, const
         const size_t traitid = i % arch.ntraits;
 
         // Add environmental noise
-        traits[i] += envnoise(rnd::rng) * pars.envnoise[traitid];
+        traits[i] += getnormal(rnd::rng) * pars.envnoise[traitid];
 
     }
 
@@ -286,16 +297,14 @@ std::vector<double> develop(const std::vector<std::bitset<64u> > &alleles, const
 }
 
 // Function to save trait values to file
-void saveTraits(const std::vector<double> &traits, const size_t &n) {
+void stf::saveTraits(const std::vector<double> &traits, const size_t &n, const std::string &filename) {
 
     // traits: vector of trait values
     // n: number of traits per individual
+    // filename: name of the file to save
 
     // Check
     assert(traits.size() % n == 0u);
-
-    // File name
-    const std::string filename = "traits.csv";
 
     // Create output file stream
     std::ofstream file(filename);
@@ -321,10 +330,11 @@ void saveTraits(const std::vector<double> &traits, const size_t &n) {
 }
 
 // Function to save matrix of alleles to file
-void saveAlleles(std::vector<std::bitset<64u> > &alleles, const size_t &N, const bool &binary = false) {
+void stf::saveAlleles(std::vector<std::bitset<64u> > &alleles, const size_t &N, const std::string &filename, const bool &binary) {
 
     // alleles: vector of bitsets representing matrix of alleles
     // N: total number of alleles in the population
+    // filename: name of the file to save
     // binary: whether to save in binary (if not, CSV)
 
     // Number of bits per bitset
@@ -334,18 +344,19 @@ void saveAlleles(std::vector<std::bitset<64u> > &alleles, const size_t &N, const
     for (size_t i = 0u; i < N % n; ++i)
         alleles.back().reset(i);
 
+    // Create output file stream
+    std::ofstream file;
+
+    // Open the file in the right mode
+    if (binary) file.open(filename, std::ios::binary);
+    else file.open(filename);
+
+    // Check that it is open    
+    if (!file.is_open())
+        throw std::runtime_error("Unable to open file " + filename);
+
     // If saving in binary...
     if (binary) {
-
-        // File name
-        const std::string filename = "alleles.dat";
-
-        // Create output file stream
-        std::ofstream file(filename, std::ios::binary);
-
-        // Check that it is open
-        if (!file.is_open())
-            throw std::runtime_error("Unable to open file " + filename);
 
         // For each bitset...
         for (size_t j = 0u; j < alleles.size(); ++j) {
@@ -366,31 +377,23 @@ void saveAlleles(std::vector<std::bitset<64u> > &alleles, const size_t &N, const
         // The file is in written in binary. Make sure to read it back on a
         // bit-by-bit basis, to be able to analyze the outcome.
 
-        // Close the file
-        file.close();
-
-        // Check
-        assert(!file.is_open());
-
     } else {
 
-        // File name
-        const std::string filename = "alleles.csv";
-
-        // Otherwise, save in text format
-        std::ofstream file(filename);
-
-        // Check that it is open
-        if (!file.is_open())
-            throw std::runtime_error("Unable to open file " + filename);
-
-        // Write alleles to the file
+        // Write alleles to the file as text
         for (size_t i = 0u; i < N; ++i) {
             file << alleles[i / n].test(i % n);
             if (i % n == n - 1u) file << '\n';
             else file << ',';
         }
-    }    
+
+    }
+
+    // Close the file
+    file.close();
+
+    // Check
+    assert(!file.is_open());
+    
 }
 
 // Main function
@@ -458,16 +461,16 @@ void doMain(const std::vector<std::string> &args) {
     // Note: The size of a bitset must be hard-coded in C++.
     
     // Throw mutations
-    mutate(alleles, pars.allfreq, N, pars.sampling, pars.ratio);
+    gen::mutate(alleles, pars.allfreq, N, pars.sampling, pars.ratio);
 
     // Develop genotypes into phenotypes
-    const std::vector<double> traits = develop(alleles, pars, arch, N);
+    const std::vector<double> traits = gen::develop(alleles, pars, arch, N);
 
     // Save trait values to file
-    saveTraits(traits, pars.ntraits);
-
+    stf::saveTraits(traits, pars.ntraits, "traits.csv");
+    
     // Save matrix of alleles if needed
-    saveAlleles(alleles, N, pars.binary);
+    stf::saveAlleles(alleles, N, pars.binary ? "alleles.dat" : "alleles.csv", pars.binary);
     
     // Verbose if needed
     if (pars.verbose) std::cout << "Population generated successfully\n";

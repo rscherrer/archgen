@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(readParameters)
     content << "effect 0.5\n";
     content << "weight 0.3\n";
     content << "nlocipertrait 5 10 15\n";
-    content << "nedgespertrait 1 2 3\n";
+    content << "nedgespertrait 0 0 0\n";
     content << "skews 0.5 1.0 1.5\n";
     content << "epistasis 0.1 0.2 0.3\n";
     content << "dominance 0.4 0.5 0.6\n";
@@ -61,9 +61,9 @@ BOOST_AUTO_TEST_CASE(readParameters)
     BOOST_CHECK_EQUAL(pars.nlocipertrait[0], 5u);
     BOOST_CHECK_EQUAL(pars.nlocipertrait[1], 10u);
     BOOST_CHECK_EQUAL(pars.nlocipertrait[2], 15u);
-    BOOST_CHECK_EQUAL(pars.nedgespertrait[0], 1u);
-    BOOST_CHECK_EQUAL(pars.nedgespertrait[1], 2u);
-    BOOST_CHECK_EQUAL(pars.nedgespertrait[2], 3u);
+    BOOST_CHECK_EQUAL(pars.nedgespertrait[0], 0u);
+    BOOST_CHECK_EQUAL(pars.nedgespertrait[1], 0u);
+    BOOST_CHECK_EQUAL(pars.nedgespertrait[2], 0u);
     BOOST_CHECK_EQUAL(pars.skews[0], 0.5);
     BOOST_CHECK_EQUAL(pars.skews[1], 1.0);
     BOOST_CHECK_EQUAL(pars.skews[2], 1.5);
@@ -442,7 +442,7 @@ BOOST_AUTO_TEST_CASE(readInvalidVerbose)
 {
 
     // Write a file with invalid verbosity flag
-    tst::write("p1.txt", "verbose -1\n");
+    tst::write("p1.txt", "verbose 2\n");
     tst::write("p2.txt", "verbose 1 1\n");
 
     // Check
@@ -452,6 +452,21 @@ BOOST_AUTO_TEST_CASE(readInvalidVerbose)
     // Remove files
     std::remove("p1.txt");
     std::remove("p2.txt");
+
+}
+
+// Case with too few edges to connect all loci
+BOOST_AUTO_TEST_CASE(readTooFewEdgesGivenLoci)
+{
+
+    // Write parameter file
+    tst::write("p1.txt", "ntraits 3\nnlocipertrait 3 3 3\nnedgespertrait 1 0 0\nskews 1 1 1\nepistasis 1 1 1\ndominance 1 1 1\nenvnoise 1 1 1\n");
+
+    // Check error
+    tst::checkError([&]() { Parameters pars("p1.txt"); }, "Not enough edges to connect all loci for trait 1 in file p1.txt");
+
+    // Remove files
+    std::remove("p1.txt");
 
 }
 

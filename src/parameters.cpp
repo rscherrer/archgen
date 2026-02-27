@@ -140,7 +140,11 @@ void Parameters::read(const std::string &filename) {
     // For each trait...
     for (size_t i = 0u; i < ntraits; ++i) {
 
-         // Check that fewer edges than a full graph allows
+        // Check that enough edges to connect all loci
+        if (nedgespertrait[i] > 0u && nedgespertrait[i] < nlocipertrait[i] - 1u)
+            throw std::runtime_error("Not enough edges to connect all loci for trait " + std::to_string(i + 1u) + " in file " + filename);
+
+        // Check that fewer edges than a full graph allows
         if (nedgespertrait[i] > (nlocipertrait[i] * (nlocipertrait[i] - 1u)) / 2u) 
             throw std::runtime_error("Too many edges for the number of loci for trait " + std::to_string(i + 1u) + " in file " + filename);
 

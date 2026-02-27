@@ -39,6 +39,10 @@ BOOST_AUTO_TEST_CASE(useCaseWithParameterFile) {
 
     // Cleanup
     std::remove("parameters.txt");
+    std::remove("paramlog.txt");
+    std::remove("architecture.txt");
+    std::remove("alleles.csv");
+    std::remove("traits.csv");
 
 }
 
@@ -76,6 +80,9 @@ BOOST_AUTO_TEST_CASE(useCaseWithParameterSaving) {
     // Cleanup
     std::remove("parameters.txt");
     std::remove("paramlog.txt");
+    std::remove("architecture.txt");
+    std::remove("alleles.csv");
+    std::remove("traits.csv");
 
 }
 
@@ -100,6 +107,8 @@ BOOST_AUTO_TEST_CASE(useCaseWithArchitectureLoading) {
     std::remove("parameters.txt");
     std::remove("paramlog.txt");
     std::remove("architecture.txt");
+    std::remove("alleles.csv");
+    std::remove("traits.csv");
 
 }
 
@@ -136,6 +145,8 @@ BOOST_AUTO_TEST_CASE(useCaseWithArchitectureSaving) {
     std::remove("parameters.txt");
     std::remove("paramlog.txt");
     std::remove("architecture.txt");
+    std::remove("alleles.csv");
+    std::remove("traits.csv");
 
 }
 
@@ -155,6 +166,7 @@ BOOST_AUTO_TEST_CASE(useCaseOutputFiles) {
     // Cleanup
     std::remove("parameters.txt");
     std::remove("paramlog.txt");
+    std::remove("architecture.txt");
     std::remove("alleles.dat");
     std::remove("traits.csv");
 
@@ -174,5 +186,217 @@ BOOST_AUTO_TEST_CASE(useCaseWithVerbose) {
 
     // Cleanup
     std::remove("parameters.txt");
+    std::remove("paramlog.txt");
+    std::remove("architecture.txt");
+    std::remove("alleles.csv");
+    std::remove("traits.csv");
+
+}
+
+// Test that it works when there are edges in the gene network
+BOOST_AUTO_TEST_CASE(useCaseWithEdges) {
+
+    // Write a parameter file with epistasis
+    tst::write("parameters.txt", "nedgespertrait 11");
+
+    // Check that the program runs
+    BOOST_CHECK_NO_THROW(doMain({"program", "parameters.txt"}));
+
+    // Cleanup
+    std::remove("parameters.txt");
+    std::remove("paramlog.txt");
+    std::remove("architecture.txt");
+    std::remove("alleles.csv");
+    std::remove("traits.csv");
+
+}
+
+// Test that it works with more than one trait
+BOOST_AUTO_TEST_CASE(useCaseWithMultipleTraits) {
+
+    // Write a parameter file with multiple traits
+    std::ostringstream content;
+    content << "ntraits 3\n";
+    content << "nlocipertrait 9 9 7\n";
+    content << "nedgespertrait 9 9 9\n";
+    content << "skews 1 1 1\n";
+    content << "epistasis 0.1 0.1 0.1\n";
+    content << "dominance 0.4 0.4 0.4\n";
+    content << "envnoise 0.7 0.7 0.7\n";
+    tst::write("parameters.txt", content.str());
+
+    // Check that the program runs
+    BOOST_CHECK_NO_THROW(doMain({"program", "parameters.txt"}));
+
+    // Cleanup
+    std::remove("parameters.txt");
+    std::remove("paramlog.txt");
+    std::remove("architecture.txt");
+    std::remove("alleles.csv");
+    std::remove("traits.csv");
+
+}
+
+// Test that error when cannot open trait output file
+BOOST_AUTO_TEST_CASE(abuseCannotOpenTraitOutputFile) {
+
+    // Test with empty file name
+    BOOST_CHECK_THROW(stf::saveTraits({1.0, 2.0, 3.0}, 3, ""), std::runtime_error);
+
+}
+
+// Test that error when cannot open allele output file
+BOOST_AUTO_TEST_CASE(abuseCannotOpenAlleleOutputFile) {
+
+    // Create alleles to save
+    std::bitset<64u> bits;
+    std::vector<std::bitset<64u> > alleles = {bits};
+
+    // Test with empty file name
+    BOOST_CHECK_THROW(stf::saveAlleles(alleles, 64u, "", false), std::runtime_error);
+
+}
+
+// Test that it works with given number of mutations to sample (default)
+BOOST_AUTO_TEST_CASE(useCaseWithGivenSampling) {
+
+    // Write a parameter file with given sampling
+    tst::write("parameters.txt", "allfreq 0.2");
+
+    // Check that the program runs
+    BOOST_CHECK_NO_THROW(doMain({"program", "parameters.txt"}));
+
+    // Cleanup
+    std::remove("parameters.txt");
+    std::remove("paramlog.txt");
+    std::remove("architecture.txt");
+    std::remove("alleles.csv");
+    std::remove("traits.csv");
+
+}
+
+// Test that it works with Bernoulli sampling of mutations
+BOOST_AUTO_TEST_CASE(useCaseWithBernoulliSampling) {
+
+    // Write a parameter file with Bernoulli sampling
+    tst::write("parameters.txt", "allfreq 0.2\nsampling 1");
+
+    // Check that the program runs
+    BOOST_CHECK_NO_THROW(doMain({"program", "parameters.txt"}));
+
+    // Cleanup
+    std::remove("parameters.txt");
+    std::remove("paramlog.txt");
+    std::remove("architecture.txt");
+    std::remove("alleles.csv");
+    std::remove("traits.csv");
+
+}
+
+// Test that it works with binomial sampling of mutations
+BOOST_AUTO_TEST_CASE(useCaseWithBinomialSampling) {
+
+    // Write a parameter file with binomial sampling
+    tst::write("parameters.txt", "allfreq 0.2\nsampling 2");
+
+    // Check that the program runs
+    BOOST_CHECK_NO_THROW(doMain({"program", "parameters.txt"}));
+
+    // Cleanup
+    std::remove("parameters.txt");
+    std::remove("paramlog.txt");
+    std::remove("architecture.txt");
+    std::remove("alleles.csv");
+    std::remove("traits.csv");
+
+}
+
+// Test that it works with binomial sampling and high mutation rate
+BOOST_AUTO_TEST_CASE(useCaseWithBinomialSamplingHighMutationRate) {
+
+    // Write a parameter file with binomial sampling and high mutation rate
+    tst::write("parameters.txt", "allfreq 0.7\nsampling 2");
+
+    // Check that the program runs
+    BOOST_CHECK_NO_THROW(doMain({"program", "parameters.txt"}));
+
+    // Cleanup
+    std::remove("parameters.txt");
+    std::remove("paramlog.txt");
+    std::remove("architecture.txt");
+    std::remove("alleles.csv");
+    std::remove("traits.csv");
+
+}
+
+// Test that it works with binomial sampling and full shuffle (forced by low ratio)
+BOOST_AUTO_TEST_CASE(useCaseWithBinomialSamplingFullShuffle) {
+
+    // Write a parameter file with binomial sampling and low ratio to force full shuffle
+    tst::write("parameters.txt", "allfreq 0.2\nsampling 2\nratio 0");
+
+    // Check that the program runs
+    BOOST_CHECK_NO_THROW(doMain({"program", "parameters.txt"}));
+
+    // Cleanup
+    std::remove("parameters.txt");
+    std::remove("paramlog.txt");
+    std::remove("architecture.txt");
+    std::remove("alleles.csv");
+    std::remove("traits.csv");
+
+}
+
+// Test that it works with geometric sampling of mutations
+BOOST_AUTO_TEST_CASE(useCaseWithGeometricSampling) {
+
+    // Write a parameter file with geometric sampling
+    tst::write("parameters.txt", "allfreq 0.2\nsampling 3");
+
+    // Check that the program runs
+    BOOST_CHECK_NO_THROW(doMain({"program", "parameters.txt"}));
+
+    // Cleanup
+    std::remove("parameters.txt");
+    std::remove("paramlog.txt");
+    std::remove("architecture.txt");
+    std::remove("alleles.csv");
+    std::remove("traits.csv");
+
+}
+
+// Test that it works with geometric sampling and very high mutation rate
+BOOST_AUTO_TEST_CASE(useCaseWithGeometricSamplingHighMutationRate) {
+
+    // Write a parameter file with geometric sampling and very high mutation rate
+    tst::write("parameters.txt", "allfreq 0.99\nsampling 3");
+
+    // Check that the program runs
+    BOOST_CHECK_NO_THROW(doMain({"program", "parameters.txt"}));
+
+    // Cleanup
+    std::remove("parameters.txt");
+    std::remove("paramlog.txt");
+    std::remove("architecture.txt");
+    std::remove("alleles.csv");
+    std::remove("traits.csv");
+
+}
+
+// Test that it works with full mutations
+BOOST_AUTO_TEST_CASE(useCaseWithFullSampling) {
+
+    // Write a parameter file with full sampling
+    tst::write("parameters.txt", "allfreq 1");
+
+    // Check that the program runs
+    BOOST_CHECK_NO_THROW(doMain({"program", "parameters.txt"}));
+
+    // Cleanup
+    std::remove("parameters.txt");
+    std::remove("paramlog.txt");
+    std::remove("architecture.txt");
+    std::remove("alleles.csv");
+    std::remove("traits.csv");
 
 }

@@ -4,7 +4,7 @@ This is the source code for a simple simulator of alleles and trait values in a 
 
 ![Build](https://img.shields.io/badge/build-passing-brightgreen)
 ![Tests](https://img.shields.io/badge/tests-passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-unknown-red)
+![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
 
 ## Description
 

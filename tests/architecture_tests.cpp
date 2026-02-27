@@ -454,10 +454,10 @@ BOOST_AUTO_TEST_CASE(generateArchitecture) {
 
     // Create parameters
     Parameters pars;
-    pars.ntraits = 2u;
-    pars.nlocipertrait = {100u, 100u};
-    pars.nedgespertrait = {100u, 100u};
-    pars.skews = {0.5, 1.0};
+    pars.ntraits = 3u;
+    pars.nlocipertrait = {100u, 100u, 99u};
+    pars.nedgespertrait = {100u, 100u, 100u};
+    pars.skews = {0.5, 1.0, 1.5};
 
     // Update internal parameters
     pars.update();
@@ -467,18 +467,41 @@ BOOST_AUTO_TEST_CASE(generateArchitecture) {
     arch.generate(pars);
 
     // Check that the architecture has been properly generated
-    BOOST_CHECK_EQUAL(arch.nloci, 200u);
-    BOOST_CHECK_EQUAL(arch.nedges, 200u);
-    BOOST_CHECK_EQUAL(arch.ntraits, 2u);
+    BOOST_CHECK_EQUAL(arch.nloci, 299u);
+    BOOST_CHECK_EQUAL(arch.nedges, 300u);
+    BOOST_CHECK_EQUAL(arch.ntraits, 3u);
     BOOST_CHECK_EQUAL(arch.nlocipertrait[0], 100u);
     BOOST_CHECK_EQUAL(arch.nlocipertrait[1], 100u);
+    BOOST_CHECK_EQUAL(arch.nlocipertrait[2], 99u);
     BOOST_CHECK_EQUAL(arch.nedgespertrait[0], 100u);
     BOOST_CHECK_EQUAL(arch.nedgespertrait[1], 100u);
-    BOOST_CHECK_EQUAL(arch.traitids.size(), 200u);
-    BOOST_CHECK_EQUAL(arch.effects.size(), 200u);
-    BOOST_CHECK_EQUAL(arch.dominances.size(), 200u);
-    BOOST_CHECK_EQUAL(arch.from.size(), 200u);
-    BOOST_CHECK_EQUAL(arch.to.size(), 200u);
-    BOOST_CHECK_EQUAL(arch.weights.size(), 200u);
+    BOOST_CHECK_EQUAL(arch.nedgespertrait[2], 100u);
+    BOOST_CHECK_EQUAL(arch.traitids.size(), 299u);
+    BOOST_CHECK_EQUAL(arch.effects.size(), 299u);
+    BOOST_CHECK_EQUAL(arch.dominances.size(), 299u);
+    BOOST_CHECK_EQUAL(arch.from.size(), 300u);
+    BOOST_CHECK_EQUAL(arch.to.size(), 300u);
+    BOOST_CHECK_EQUAL(arch.weights.size(), 300u);
+
+}
+
+// Test that error when not all edges can be made
+BOOST_AUTO_TEST_CASE(errorWhenGeneratingArchitecture) {
+
+    // Note: This test is PROBABILISTIC.
+
+    // Create parameters
+    Parameters pars;
+    pars.ntraits = 1u;
+    pars.nlocipertrait = {100u};
+    pars.nedgespertrait = {4950u};
+    pars.skews = {1.0};
+
+    // Update internal parameters
+    pars.update();
+
+    // Check that it throws an error
+    Architecture arch;
+    tst::checkError([&]() { arch.generate(pars); }, "Not all requested edges could be made for trait 1 with the given parameters");
 
 }

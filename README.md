@@ -88,4 +88,4 @@ Optional extra links:
 
 Copyright (c) Raphaël Scherrer, 2026.
 
-This code is licensed under the MIT license (see [license](LICENSE.txt) file). This project is inspired from the genetic architecture implementation of a [previous work](https://github.com/rscherrer/speciom) by Raphaël Scherrer and G. Sander van Doorn. This code comes with no guarantee whatsoever.
+This code is licensed under the MIT license (see [license](LICENSE.txt) file). This project is inspired from the genetic architecture implementation of a [previous work](https://github.com/rscherrer/speciome) by Raphaël Scherrer and G. Sander van Doorn. This code comes with no guarantee whatsoever.

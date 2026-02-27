@@ -1,0 +1,13 @@
+cff-version: 1.0.0
+message: "If you use this software, please cite it as below."
+
+authors:
+  - family-names: Scherrer
+    given-names: Raphaël
+    orcid: https://orcid.org/0000-0002-1447-7630
+
+title: "ArchGen: Simple Genetic Architecture and Quantitative Genetic Data Simulator"
+date-released: 2026-02-27
+
+repository-code: https://github.com/rscherrer/archgen
+license: MIT

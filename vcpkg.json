@@ -1,5 +1,5 @@
 {
-  "name": "genarcher",
+  "name": "archgen",
   "dependencies": [
     "boost-test"
   ]

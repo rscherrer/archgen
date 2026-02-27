@@ -80,7 +80,7 @@ cmake --build .
 
 This setup places the compiled executable in the `bin/` folder.
 
-(Note that the steps are **the same on Windows, MacOS and Linux**.)
+Note that the steps are **the same on Windows, MacOS and Linux**, although the installation steps of a suitable C++ compiler will typically differ from platform to platform (e.g. environment variables on Windows), and so we refer the reader to online documentation for that.
 
 ### IDEs
 

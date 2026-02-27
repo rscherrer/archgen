@@ -10,6 +10,7 @@
 #include <cassert>
 #include <algorithm>
 #include <fstream>
+#include <numeric>
 
 // Function to throw mutations into the matrix of alleles
 void gen::mutate(std::vector<std::bitset<64u> > &alleles, const double &mu, const size_t &N, const size_t &imode, const double &ratio) {

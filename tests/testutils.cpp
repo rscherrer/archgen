@@ -1,10 +1,10 @@
 // Functions pertaining to the tst namespace.
 
 #include "testutils.hpp"
+#include <bitset>
 
 // Function to read a binary data file
-std::vector<double> tst::read(const std::string &filename)
-{
+std::vector<double> tst::read(const std::string &filename) {
 
     // filename: the name of the file to read
 
@@ -26,7 +26,7 @@ std::vector<double> tst::read(const std::string &filename)
         while(file) {
 
             // Read elements
-            file.read((char *) &x, sizeof(size_t));
+            file.read((char *) &x, sizeof(double));
 
             // Exit if reaching the end of the file
             if (!file.gcount()) break;

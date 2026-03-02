@@ -154,7 +154,29 @@ BOOST_AUTO_TEST_CASE(useCaseWithArchitectureSaving) {
 BOOST_AUTO_TEST_CASE(useCaseOutputFiles) {
 
     // Write a parameter file specifying to save data
-    tst::write("parameters.txt", "binary 1");
+    tst::write("parameters.txt", "popsize 3\nnlocipertrait 3");
+
+    // Run the simulation
+    doMain({"program", "parameters.txt"});
+
+    // Check that the expected output files are present
+    BOOST_CHECK_NO_THROW(tst::readtext("alleles.csv"));
+    BOOST_CHECK_NO_THROW(tst::readtext("traits.csv"));
+
+    // Cleanup
+    std::remove("parameters.txt");
+    std::remove("paramlog.txt");
+    std::remove("architecture.txt");
+    std::remove("alleles.csv");
+    std::remove("traits.csv");
+
+}
+
+// Test that the right output files are being written
+BOOST_AUTO_TEST_CASE(useCaseOutputFilesBinary) {
+
+    // Write a parameter file specifying to save data
+    tst::write("parameters.txt", "popsize 3\nnlocipertrait 3\nbinary 1");
 
     // Run the simulation
     doMain({"program", "parameters.txt"});
@@ -253,7 +275,7 @@ BOOST_AUTO_TEST_CASE(abuseCannotOpenAlleleOutputFile) {
     std::vector<std::bitset<64u> > alleles = {bits};
 
     // Test with empty file name
-    BOOST_CHECK_THROW(stf::saveAlleles(alleles, 64u, "", false), std::runtime_error);
+    BOOST_CHECK_THROW(stf::saveAlleles(alleles, 4u, 8u, "", false), std::runtime_error);
 
 }
 

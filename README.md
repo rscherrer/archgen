@@ -53,7 +53,7 @@ loadarch 0
 savearch 1
 savepars 1
 binary 0
-verbose 1   
+verbose 1
 ```
 
 In the parameter file, each line should contain a parameter name followed by its value. Lines starting with **#** will be treated as comments. Click [here](doc/PARAMETERS.md) for a guide of the available parameters and their meaning. Please note that **the order of parameters in the file matters**, as some are needed to know how many values to read for others. Please keep them in the order shown above or in the parameter guide. Parameters that are omitted will take default values.

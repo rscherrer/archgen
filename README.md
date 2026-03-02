@@ -36,11 +36,10 @@ The parameter file should look like this:
 
 ```
 popsize 100
-nloci 300
-nedges 3000
 ntraits 3
 allfreq 0.2
 effect 0.1
+weight 0.1
 nlocipertrait 100 100 100
 nedgespertrait 1000 1000 1000
 skews 1 1 1

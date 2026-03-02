@@ -6,9 +6,7 @@ Note that hereafter, "positive" means ***including zero***, while "strictly posi
 
 | Parameter name | Default value(s) | Accepted values | No. values | Description | Notes |
 |--|--|--|--|--|--|
-| `poopsize` | `10` | Strictly positive integers | 1 | Number of individuals in the population | |
-| `nloci` | `10` | Strictly positive integers | 1 | Number of loci in the genome | |
-| `nedges` | `0` | Positive integers | 1 | Number of edges across the gene networks of all traits | |
+| `popsize` | `10` | Strictly positive integers | 1 | Number of individuals in the population | |
 | `ntraits` | `1` | Strictly positive integers | 1 | Number of traits in the model | |
 | `allfreq` | `0` | Decimals from zero to one | 1 | Initial frequency of the 1-allele across all loci | |
 | `effect` | `0` | Positive decimals | 1 | Standard deviation of the distribution of additive effect sizes across loci | Only used if the genetic architecture must be generated, see [here](ARCHITECTURE.md) | |

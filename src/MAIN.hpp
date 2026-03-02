@@ -18,7 +18,7 @@ namespace stf {
     void saveTraits(const std::vector<double>&, const size_t&, const std::string&);
 
     // Function to save matrix of alleles to file
-    void saveAlleles(std::vector<std::bitset<64u> >&, const size_t&, const std::string&, const bool& = false);
+    void saveAlleles(std::vector<std::bitset<64u> >&, const size_t&, const size_t&, const std::string&, const bool& = false);
 
 }
 

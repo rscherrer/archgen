@@ -331,15 +331,19 @@ void stf::saveTraits(const std::vector<double> &traits, const size_t &n, const s
 }
 
 // Function to save matrix of alleles to file
-void stf::saveAlleles(std::vector<std::bitset<64u> > &alleles, const size_t &N, const std::string &filename, const bool &binary) {
+void stf::saveAlleles(std::vector<std::bitset<64u> > &alleles, const size_t &popsize, const size_t &nloci, const std::string &filename, const bool &binary) {
 
     // alleles: vector of bitsets representing matrix of alleles
-    // N: total number of alleles in the population
+    // popsize: total number of individuals in the population
+    // nloci: number of loci in the genome
     // filename: name of the file to save
     // binary: whether to save in binary (if not, CSV)
 
     // Number of bits per bitset
     const size_t n = 64u;
+
+    // Total number of alleles in the population
+    const size_t N = popsize * nloci * 2u;
 
     // Make sure that the trailing bits are zeros
     for (size_t i = 0u; i < N % n; ++i)
@@ -380,13 +384,19 @@ void stf::saveAlleles(std::vector<std::bitset<64u> > &alleles, const size_t &N, 
 
     } else {
 
-        // Write alleles to the file as text
+        // Target number of columns
+        const size_t ncols = 2u * nloci;
+
+        // For each allele...
         for (size_t i = 0u; i < N; ++i) {
+
+            // Write allele to the file as text
             file << alleles[i / n].test(i % n);
-            if (i % n == n - 1u) file << '\n';
+
+            // Right separator
+            if (i % ncols == ncols - 1u) file << '\n';
             else file << ',';
         }
-
     }
 
     // Close the file
@@ -471,7 +481,7 @@ void doMain(const std::vector<std::string> &args) {
     stf::saveTraits(traits, pars.ntraits, "traits.csv");
     
     // Save matrix of alleles if needed
-    stf::saveAlleles(alleles, N, pars.binary ? "alleles.dat" : "alleles.csv", pars.binary);
+    stf::saveAlleles(alleles, pars.popsize, pars.nloci, pars.binary ? "alleles.dat" : "alleles.csv", pars.binary);
     
     // Verbose if needed
     if (pars.verbose) std::cout << "Population generated successfully\n";

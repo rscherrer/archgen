@@ -8,6 +8,8 @@ These are possible small changes for the code as it is now.
 * Right now, if `binary` is `1`, the program compresses alleles into 64-bit (integral) numbers upon saving, but this can only be done on a 64-bit system. Running this program on a 32-bit system will save erroneous data. Could we find a way to make it work for any system? (Note that the size of a bitset is hard-coded in C++; maybe use aliases and templates, or store in 32 bits and save two in one if running on 64?)
 * The `check()` function of the `Architecture` class loops a lot to perform assertions. In release mode, these assertions are not performed but the loops are still there. Is there a way to avoid that?
 * I think technically the `ratio` parameter will not allow full shuffle ever if it is greater than 0.5 (because when more than half of the alleles must mutate we first mutate everything, then mutate back some). Change accepted value?
+* Look into normalizing epistatic effects? See the [speciome](https://gitub.com/rscherrer/speciome) project for details.
+* Test output file size?
 
 ### Documentation
 

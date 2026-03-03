@@ -298,14 +298,14 @@ std::vector<double> gen::develop(const std::vector<std::bitset<64u> > &alleles, 
 }
 
 // Function to save trait values to file
-void stf::saveTraits(const std::vector<double> &traits, const size_t &n, const std::string &filename) {
+void stf::saveTraits(const std::vector<double> &traits, const size_t &ntraits, const std::string &filename) {
 
     // traits: vector of trait values
-    // n: number of traits per individual
+    // ntraits: number of traits per individual
     // filename: name of the file to save
 
     // Check
-    assert(traits.size() % n == 0u);
+    assert(traits.size() % ntraits == 0u);
 
     // Create output file stream
     std::ofstream file(filename);
@@ -318,20 +318,31 @@ void stf::saveTraits(const std::vector<double> &traits, const size_t &n, const s
     file << "id,";
 
     // For each trait...
-    for (size_t j = 0u; j < n; ++j) {
+    for (size_t j = 0u; j < ntraits; ++j) {
 
         // Write trait name to header
         file << "trait" << j + 1u;
-        if (j < n - 1u) file << ',';
+        if (j < ntraits - 1u) file << ',';
         else file << '\n';
 
     }
 
-    // Write trait values to the file
-    for (size_t i = 0u; i < traits.size(); ++i) {
+    // Get number of individuals
+    const size_t popsize = traits.size() / ntraits;
+
+    // For each trait in each individual...
+    for (size_t i = 0u; i < ntraits * popsize; ++i) {
+
+        // Write individual identifier to file
+        if (i % ntraits == 0u) file << i / ntraits + 1u << ',';
+
+        // Write trait value to file
         file << traits[i];
-        if (i % n == n - 1u) file << '\n';
+
+        // Right separator
+        if (i % ntraits == ntraits - 1u) file << '\n';
         else file << ',';
+            
     }
 
     // Note: Each row is an individual, each column a trait.
@@ -415,6 +426,9 @@ void stf::saveAlleles(std::vector<std::bitset<64u> > &alleles, const size_t &pop
 
         // For each locus in each individual...
         for (size_t i = 0u; i < nloci * popsize; ++i) {
+
+            // Write individual identifier to file
+            if (i % nloci == 0u) file << i / nloci + 1u << ',';
 
             // Find the two haplotypes in the bitsets
             const size_t j = i / 2u;

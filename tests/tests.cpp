@@ -164,26 +164,33 @@ BOOST_AUTO_TEST_CASE(useCaseOutputFiles) {
     BOOST_CHECK_NO_THROW(tst::readtext("traits.csv"));
 
     // Read values in
-    std::vector<double> alleles = tst::readcsv("genotypes.csv");
+    std::vector<double> genotypes = tst::readcsv("genotypes.csv");
     std::vector<double> traits = tst::readcsv("traits.csv");
 
     // Check that the right number of values are present
-    BOOST_CHECK_EQUAL(alleles.size(), 3u * 3u);
-    BOOST_CHECK_EQUAL(traits.size(), 3u);
+    BOOST_CHECK_EQUAL(genotypes.size(), 4u * 3u);
+    BOOST_CHECK_EQUAL(traits.size(), 2u * 3u);
 
     // Note: Here alleles are saved as genotypes (0, 1 or 2), not as separate alleles.
+    // We also must keep in mind that one of the columns is the individual identifier.
 
     // Prepare to check
     bool iswrong = false;
 
     // For each genotype...
-    for (size_t n : alleles) {
+    for (size_t i = 0u; i < genotypes.size(); ++i) {
+
+        // Skip individual identifier column
+        if (i % 4u == 0u) continue;
+
+        // Read it
+        const size_t n = static_cast<size_t>(genotypes[i]);
 
         // If out of bounds...
         if (n > 2u) {
             
             // Flag and exit
-            iswrong = false;
+            iswrong = true;
             break;
 
         }

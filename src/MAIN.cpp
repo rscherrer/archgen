@@ -397,6 +397,19 @@ void stf::saveAlleles(std::vector<std::bitset<64u> > &alleles, const size_t &pop
 
     } else {
 
+        // First write a header
+        file << "id,";
+
+        // For each locus...
+        for (size_t i = 0u; i < nloci; ++i) {
+
+            // Add to the header
+            file << "locus" << i + 1u;
+            if (i < nloci - 1u) file << ',';
+            else file << '\n';
+
+        }
+
         // Note: If saving as CSV, we save the combined genotype (0, 1 or 2),
         // not the alleles separately.
 

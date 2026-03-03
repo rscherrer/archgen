@@ -4,7 +4,7 @@
 #include <bitset>
 
 // Function to read a binary data file
-std::vector<double> tst::read(const std::string &filename) {
+std::vector<double> tst::readbin(const std::string &filename) {
 
     // filename: the name of the file to read
 

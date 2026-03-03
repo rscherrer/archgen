@@ -182,11 +182,11 @@ BOOST_AUTO_TEST_CASE(useCaseOutputFilesBinary) {
     doMain({"program", "parameters.txt"});
 
     // Check that the expected output files are present
-    BOOST_CHECK_NO_THROW(tst::read("alleles.dat"));
+    BOOST_CHECK_NO_THROW(tst::readbin("alleles.dat"));
     BOOST_CHECK_NO_THROW(tst::readtext("traits.csv"));
 
     // Read binary alleles into encoded decimal numbers
-    std::vector<double> alleles = tst::read("alleles.dat");
+    std::vector<double> alleles = tst::readbin("alleles.dat");
 
     // Number of bits that should have been saved
     const size_t nbits = 3u * 3u * 2u;

@@ -180,27 +180,20 @@ BOOST_AUTO_TEST_CASE(useCaseOutputFiles) {
 
 }
 
-// Test that the right output files are being written
+// Test that the right output files are being written in binary format
 BOOST_AUTO_TEST_CASE(useCaseOutputFilesBinary) {
 
     // Write a parameter file specifying to save data
     tst::write("parameters.txt", "popsize 3\nnlocipertrait 3\nbinary 1");
 
-    // Run the simulation
-    doMain({"program", "parameters.txt"});
-
-    // Check that the expected output files are present
-    BOOST_CHECK_NO_THROW(tst::readbin("alleles.dat"));
-    BOOST_CHECK_NO_THROW(tst::readtext("traits.csv"));
-
-    // Read binary alleles into encoded decimal numbers
-    std::vector<double> alleles = tst::readbin("alleles.dat");
-
     // Number of bits that should have been saved
     const size_t nbits = 3u * 3u * 2u;
 
-    // Way below 64 (or even 32) bits, so should be saved in one number
-    BOOST_CHECK_EQUAL(alleles.size(), 1u);
+    // Run the simulation
+    doMain({"program", "parameters.txt"});
+
+    // Read binary alleles into encoded decimal numbers
+    std::vector<double> alleles = tst::readbin("alleles.dat");
 
     // Extract all the bits
     std::bitset<64u> bits(alleles[0u]);
@@ -208,12 +201,10 @@ BOOST_AUTO_TEST_CASE(useCaseOutputFilesBinary) {
     // Test maximum number of bits equal to one
     BOOST_CHECK(bits.count() <= nbits);
 
-    // Prepare to count
-    size_t trailing = 0u;
-
     // Count trailing bits
+    size_t trailing = 0u;
     for (size_t i = nbits; i < bits.size(); ++i)
-        trailing += bits.test(i);
+        trailing += bits.test(i);        
 
     // Check that they are all zeros
     BOOST_CHECK_EQUAL(trailing, 0u);

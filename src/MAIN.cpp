@@ -384,18 +384,30 @@ void stf::saveAlleles(std::vector<std::bitset<64u> > &alleles, const size_t &pop
 
     } else {
 
-        // Target number of columns
-        const size_t ncols = 2u * nloci;
+        // Note: If saving as CSV, we save the combined genotype (0, 1 or 2),
+        // not the alleles separately.
 
-        // For each allele...
-        for (size_t i = 0u; i < N; ++i) {
+        // For each locus in each individual...
+        for (size_t i = 0u; i < nloci * popsize; ++i) {
 
-            // Write allele to the file as text
-            file << alleles[i / n].test(i % n);
+            // Find the two haplotypes in the bitsets
+            const size_t j = i / 2u;
+            const size_t k = j + 1u;
+
+            // Extract alleles
+            const bool a = alleles[j / n].test(j % n);
+            const bool b = alleles[k / n].test(k % n);
+
+            // Check
+            assert(a + b <= 2u);
+
+            // Write combined genotype to file
+            file << a + b;
 
             // Right separator
-            if (i % ncols == ncols - 1u) file << '\n';
+            if (i % nloci == nloci - 1u) file << '\n';
             else file << ',';
+            
         }
     }
 

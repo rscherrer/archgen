@@ -14,20 +14,32 @@ The program saves the trait values of all individuals in a file called `traits.c
 
 ### Allele data
 
-The program saves the genotypes of all individuals in a file called `alleles.dat` (or `alleles.csv` if the `binary` parameter is set to `0`). This file contains one row per individual and two columns per locus, with the value in each cell corresponding to the allele value (0 or 1) of the individual for that locus. The first half of the columns correspond to the first allele for each locus, and the second half correspond to the second allele for each locus (diploid genetics). Like so:
+The program saves the genotypes of all individuals in a file called `alleles.csv`, if the `binary` parameter is set to `0`, or `alleles.csv` if the `binary` parameter is set to `1`. 
+
+If `binary` is set to `0`, the file `alleles.csv` contains a table with one row per individual and one column per locus. Each cell then contains the genotype of an individual for a given locus, which is the sum of two alleles (0, 1 or 2). Like so:
 
 ```
-           Hapl. 1    Hapl. 2
-     Loc. 1 2 3 4 5  1 2 3 4 5
-     --------------------------
-Ind. 1 -> 0 0 1 1 0  0 1 1 0 1
-Ind. 2 -> 1 0 0 0 1  1 0 0 1 1
-Ind. 3 -> 0 1 0 0 0  1 1 0 0 1
+     Loc. 1 2 3 4 5
+     ---------------
+Ind. 1 -> 0 1 2 1 1
+Ind. 2 -> 2 0 0 1 2
+Ind. 3 -> 1 2 0 0 1
+```
+
+If `binary` is set to `1`, the file `alleles.dat` contains an array of bits where each bit represents one allele (0 or 1) at one particular locus in one particular individual. In that case, the two alleles (i.e. haplotypes) for a given locus in a given individual are stored in two consecutive bits, like so:
+
+```
+   Loc.   1 1  2 2  3 3  4 4  5 5
+   Hapl.  1 2  1 2  1 2  1 2  1 2
+     -----------------------------
+Ind. 1 -> 0 0  0 1  1 1  1 0  0 1
+Ind. 2 -> 1 1  0 0  0 0  1 0  1 1
+Ind. 3 -> 0 1  1 1  0 0  0 0  1 0
 ```
 
 **Note** that if `binary` is set to `1`, the file `alleles.dat` will be saved in binary format, which is more compact and faster to read/write but not human-readable. To read this file, use a binary file reader that can handle the data format used (e.g., in [R](https://r-project.org), you can use the `readBin` function). Make sure to read as single bits to retrieve the allele values (0 or 1). You can also check the [readsim](https://github.com/rscherrer/readsim) package, designed to allow reading this type of data in R.
 
-Also note that you **should make sure that you know how many alleles there are to read in total** if the file is in binary, which should be `2 * nloci` (two alleles per locus) times `popsize` (number of individuals in the population, see parameter [guide](PARAMETERS.md) for details). This is because the binary file is written by coercing sets of bits (the alleles) into 64-bit (unsigned long) integers. Therefore, the total number of bits saved is a multiple of 64, but the total number of alleles may not be. If the total number of alleles is not a multiple of 64, the last integer in the file will contain some padding bits that should be ignored when reading the data.
+Also note that you **should make sure that you know how many alleles there are to read in total** if the file is in binary, which should be `2 * nloci` (two alleles per locus) times `popsize` (number of individuals in the population, see parameter [guide](PARAMETERS.md) for details). This is because the binary file is written by coercing sets of bits (the alleles) into 64-bit (unsigned long) integers. Therefore, the total number of bits saved is a multiple of 64, but the total number of alleles may not be. If the total number of alleles is not a multiple of 64, the last integer in the file will contain some padding bits that should be ignored when reading the data. You should also use these known dimensions to correctly organize the data into a matrix or a table (i.e. there should be a line break after `2 * nloci` bits).
 
 #### Known issue
 

@@ -168,8 +168,29 @@ BOOST_AUTO_TEST_CASE(useCaseOutputFiles) {
     std::vector<double> traits = tst::readcsv("traits.csv");
 
     // Check that the right number of values are present
-    BOOST_CHECK_EQUAL(alleles.size(), 3u * 3u * 2u);
+    BOOST_CHECK_EQUAL(alleles.size(), 3u * 3u);
     BOOST_CHECK_EQUAL(traits.size(), 3u);
+
+    // Note: Here alleles are saved as genotypes (0, 1 or 2), not as separate alleles.
+
+    // Prepare to check
+    bool iswrong = false;
+
+    // For each genotype...
+    for (size_t n : alleles) {
+
+        // If out of bounds...
+        if (n > 2u) {
+            
+            // Flag and exit
+            iswrong = false;
+            break;
+
+        }
+    }
+
+    // Make sure everything is fine
+    BOOST_CHECK(!iswrong);
 
     // Cleanup
     std::remove("parameters.txt");

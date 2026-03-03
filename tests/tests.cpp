@@ -163,6 +163,14 @@ BOOST_AUTO_TEST_CASE(useCaseOutputFiles) {
     BOOST_CHECK_NO_THROW(tst::readtext("alleles.csv"));
     BOOST_CHECK_NO_THROW(tst::readtext("traits.csv"));
 
+    // Read values in
+    std::vector<double> alleles = tst::readcsv("alleles.csv");
+    std::vector<double> traits = tst::readcsv("traits.csv");
+
+    // Check that the right number of values are present
+    BOOST_CHECK_EQUAL(alleles.size(), 3u * 3u * 2u);
+    BOOST_CHECK_EQUAL(traits.size(), 3u);
+
     // Cleanup
     std::remove("parameters.txt");
     std::remove("paramlog.txt");

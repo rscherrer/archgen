@@ -1,7 +1,56 @@
 // Functions pertaining to the tst namespace.
 
 #include "testutils.hpp"
-#include <bitset>
+
+// Function to read a CSV file into a vector of doubles
+std::vector<double> tst::readcsv(const std::string &filename) {
+
+    // filename: the name of the file to read
+
+    // Open the input file
+    std::ifstream file(filename.c_str(), std::ios::in);
+
+    // Check if the file is open
+    if (!file.is_open())
+        throw std::runtime_error("Unable to open file " + filename);
+
+    // Prepare storage for values
+    std::vector<double> v;
+
+    // Read one line at a time
+    std::string line;
+    while (std::getline(file, line)) {
+
+        // Split each line by commas
+        std::stringstream stream(line);
+        std::string token;
+        while (std::getline(stream, token, ',')) {
+
+            // Skip empty tokens
+            if (token.empty())
+                continue;
+
+            // Parse numeric value
+            std::stringstream parser(token);
+            double x;
+            parser >> x;
+
+            // Check parse validity
+            if (parser.fail())
+                throw std::runtime_error("Unable to parse numeric value in file " + filename);
+
+            // Store value
+            v.push_back(x);
+
+        }
+    }
+
+    // Close the file
+    file.close();
+
+    return v;
+
+}
 
 // Function to read a binary data file
 std::vector<double> tst::readbin(const std::string &filename) {
@@ -23,7 +72,7 @@ std::vector<double> tst::readbin(const std::string &filename) {
     if (file.is_open()) {
 
         // Loop through the file until we reach the end of the file
-        while(file) {
+        while (file) {
 
             // Read elements
             file.read((char *) &x, sizeof(double));

@@ -14,9 +14,9 @@ The program saves the trait values of all individuals in a file called `traits.c
 
 ### Allele data
 
-The program saves the genotypes of all individuals in a file called `alleles.csv`, if the `binary` parameter is set to `0`, or `alleles.csv` if the `binary` parameter is set to `1`. 
+The program saves the genotypes of all individuals in a file called `genotypes.csv`, if the `binary` parameter is set to `0`, or `alleles.dat` if the `binary` parameter is set to `1`. 
 
-If `binary` is set to `0`, the file `alleles.csv` contains a table with one row per individual and one column per locus. Each cell then contains the genotype of an individual for a given locus, which is the sum of two alleles (0, 1 or 2). Like so:
+If `binary` is set to `0`, the file `genotypes.csv` contains a table with one row per individual and one column per locus. Each cell then contains the genotype of an individual for a given locus, which is the sum of two alleles (0, 1 or 2). Like so:
 
 ```
      Loc. 1 2 3 4 5

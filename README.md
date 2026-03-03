@@ -64,7 +64,7 @@ The program simulates trait values based on a genetic architecture, composed of 
 
 ### Output
 
-The program outputs two main data files. The first, `traits.csv`, contains the trait values of all individuals in the population (individuals in rows, traits in columns). The second, `alleles.csv` (or `alleles.dat` if the `binary` parameter is set to `1`), contains the genotypes of all individuals in the population (individuals in rows, loci in columns), or (if `binary` is `1`), an array of bits representing all (diploid) alleles (two bits saved consecutively for each locus in each individua). See [here](doc/OUTPUT.md) for details.
+The program outputs two main data files. The first, `traits.csv`, contains the trait values of all individuals in the population (individuals in rows, traits in columns). The second output file saved is `genotypes.csv` (if `binary` is set to `0`), and contains the genotypes of all individuals in the population (individuals in rows, loci in columns). Alternatively, if `binary` is `1`, an array of bits representing all (diploid) alleles (two bits saved consecutively for each locus in each individual) is saved to a file called `alleles.dat`. See [here](doc/OUTPUT.md) for details.
 
 ## Tests
 

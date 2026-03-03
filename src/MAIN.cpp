@@ -493,7 +493,7 @@ void doMain(const std::vector<std::string> &args) {
     stf::saveTraits(traits, pars.ntraits, "traits.csv");
     
     // Save matrix of alleles if needed
-    stf::saveAlleles(alleles, pars.popsize, pars.nloci, pars.binary ? "alleles.dat" : "alleles.csv", pars.binary);
+    stf::saveAlleles(alleles, pars.popsize, pars.nloci, pars.binary ? "alleles.dat" : "genotypes.csv", pars.binary);
     
     // Verbose if needed
     if (pars.verbose) std::cout << "Population generated successfully\n";

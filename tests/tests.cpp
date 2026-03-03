@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(useCaseWithParameterFile) {
     std::remove("parameters.txt");
     std::remove("paramlog.txt");
     std::remove("architecture.txt");
-    std::remove("alleles.csv");
+    std::remove("genotypes.csv");
     std::remove("traits.csv");
 
 }
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(useCaseWithParameterSaving) {
     std::remove("parameters.txt");
     std::remove("paramlog.txt");
     std::remove("architecture.txt");
-    std::remove("alleles.csv");
+    std::remove("genotypes.csv");
     std::remove("traits.csv");
 
 }
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(useCaseWithArchitectureLoading) {
     std::remove("parameters.txt");
     std::remove("paramlog.txt");
     std::remove("architecture.txt");
-    std::remove("alleles.csv");
+    std::remove("genotypes.csv");
     std::remove("traits.csv");
 
 }
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(useCaseWithArchitectureSaving) {
     std::remove("parameters.txt");
     std::remove("paramlog.txt");
     std::remove("architecture.txt");
-    std::remove("alleles.csv");
+    std::remove("genotypes.csv");
     std::remove("traits.csv");
 
 }
@@ -160,11 +160,11 @@ BOOST_AUTO_TEST_CASE(useCaseOutputFiles) {
     doMain({"program", "parameters.txt"});
 
     // Check that the expected output files are present
-    BOOST_CHECK_NO_THROW(tst::readtext("alleles.csv"));
+    BOOST_CHECK_NO_THROW(tst::readtext("genotypes.csv"));
     BOOST_CHECK_NO_THROW(tst::readtext("traits.csv"));
 
     // Read values in
-    std::vector<double> alleles = tst::readcsv("alleles.csv");
+    std::vector<double> alleles = tst::readcsv("genotypes.csv");
     std::vector<double> traits = tst::readcsv("traits.csv");
 
     // Check that the right number of values are present
@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(useCaseOutputFiles) {
     std::remove("parameters.txt");
     std::remove("paramlog.txt");
     std::remove("architecture.txt");
-    std::remove("alleles.csv");
+    std::remove("genotypes.csv");
     std::remove("traits.csv");
 
 }
@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_CASE(useCaseWithVerbose) {
     std::remove("parameters.txt");
     std::remove("paramlog.txt");
     std::remove("architecture.txt");
-    std::remove("alleles.csv");
+    std::remove("genotypes.csv");
     std::remove("traits.csv");
 
 }
@@ -273,7 +273,7 @@ BOOST_AUTO_TEST_CASE(useCaseWithEdges) {
     std::remove("parameters.txt");
     std::remove("paramlog.txt");
     std::remove("architecture.txt");
-    std::remove("alleles.csv");
+    std::remove("genotypes.csv");
     std::remove("traits.csv");
 
 }
@@ -299,7 +299,7 @@ BOOST_AUTO_TEST_CASE(useCaseWithMultipleTraits) {
     std::remove("parameters.txt");
     std::remove("paramlog.txt");
     std::remove("architecture.txt");
-    std::remove("alleles.csv");
+    std::remove("genotypes.csv");
     std::remove("traits.csv");
 
 }
@@ -337,7 +337,7 @@ BOOST_AUTO_TEST_CASE(useCaseWithGivenSampling) {
     std::remove("parameters.txt");
     std::remove("paramlog.txt");
     std::remove("architecture.txt");
-    std::remove("alleles.csv");
+    std::remove("genotypes.csv");
     std::remove("traits.csv");
 
 }
@@ -355,7 +355,7 @@ BOOST_AUTO_TEST_CASE(useCaseWithBernoulliSampling) {
     std::remove("parameters.txt");
     std::remove("paramlog.txt");
     std::remove("architecture.txt");
-    std::remove("alleles.csv");
+    std::remove("genotypes.csv");
     std::remove("traits.csv");
 
 }
@@ -373,7 +373,7 @@ BOOST_AUTO_TEST_CASE(useCaseWithBinomialSampling) {
     std::remove("parameters.txt");
     std::remove("paramlog.txt");
     std::remove("architecture.txt");
-    std::remove("alleles.csv");
+    std::remove("genotypes.csv");
     std::remove("traits.csv");
 
 }
@@ -391,7 +391,7 @@ BOOST_AUTO_TEST_CASE(useCaseWithBinomialSamplingHighMutationRate) {
     std::remove("parameters.txt");
     std::remove("paramlog.txt");
     std::remove("architecture.txt");
-    std::remove("alleles.csv");
+    std::remove("genotypes.csv");
     std::remove("traits.csv");
 
 }
@@ -409,7 +409,7 @@ BOOST_AUTO_TEST_CASE(useCaseWithBinomialSamplingFullShuffle) {
     std::remove("parameters.txt");
     std::remove("paramlog.txt");
     std::remove("architecture.txt");
-    std::remove("alleles.csv");
+    std::remove("genotypes.csv");
     std::remove("traits.csv");
 
 }
@@ -427,7 +427,7 @@ BOOST_AUTO_TEST_CASE(useCaseWithGeometricSampling) {
     std::remove("parameters.txt");
     std::remove("paramlog.txt");
     std::remove("architecture.txt");
-    std::remove("alleles.csv");
+    std::remove("genotypes.csv");
     std::remove("traits.csv");
 
 }
@@ -445,7 +445,7 @@ BOOST_AUTO_TEST_CASE(useCaseWithGeometricSamplingHighMutationRate) {
     std::remove("parameters.txt");
     std::remove("paramlog.txt");
     std::remove("architecture.txt");
-    std::remove("alleles.csv");
+    std::remove("genotypes.csv");
     std::remove("traits.csv");
 
 }
@@ -463,7 +463,7 @@ BOOST_AUTO_TEST_CASE(useCaseWithFullSampling) {
     std::remove("parameters.txt");
     std::remove("paramlog.txt");
     std::remove("architecture.txt");
-    std::remove("alleles.csv");
+    std::remove("genotypes.csv");
     std::remove("traits.csv");
 
 }

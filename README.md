@@ -35,6 +35,7 @@ where `parameters.txt` is a text file containing a list of parameter names and v
 The parameter file should look like this:
 
 ```
+nrepl 1
 popsize 100
 ntraits 3
 allfreq 0.2

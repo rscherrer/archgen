@@ -18,6 +18,7 @@ size_t clockseed() {
 
 // Constructor
 Parameters::Parameters(const std::string& filename) :
+    nrepl(1u),
     popsize(10u),
     allfreq(0.0),
     effect(0.0),
@@ -98,7 +99,8 @@ void Parameters::read(const std::string &filename) {
         std::string name = reader.getname();
 
         // Read the parameter value(s)
-        if (name == "popsize") reader.readvalue<size_t>(popsize, chk::strictpos<size_t>);
+        if (name == "nrepl") reader.readvalue<size_t>(nrepl, chk::strictpos<size_t>);
+        else if (name == "popsize") reader.readvalue<size_t>(popsize, chk::strictpos<size_t>);
         else if (name == "allfreq") reader.readvalue<double>(allfreq, chk::proportion<double>);
         else if (name == "effect") reader.readvalue<double>(effect, chk::positive<double>);
         else if (name == "weight") reader.readvalue<double>(weight, chk::positive<double>);
@@ -204,6 +206,7 @@ void Parameters::check() const {
     checkinternal();
 
     // Check validity
+    assert(nrepl > 0u);
     assert(popsize > 0u);
     assert(ntraits > 0u);
     assert(ntraits <= nloci);
@@ -247,6 +250,7 @@ void Parameters::save(const std::string &filename) const {
         throw std::runtime_error("Unable to open file " + filename);
 
     // Write parameters to the file
+    file << "nrepl " << nrepl << '\n';
     file << "popsize " << popsize << '\n';    
     file << "allfreq " << allfreq << '\n';
     file << "effect " << effect << '\n';

@@ -298,14 +298,14 @@ std::vector<double> gen::develop(const std::vector<std::bitset<64u> > &alleles, 
 }
 
 // Function to save trait values to file
-void stf::saveTraits(const std::vector<double> &traits, const size_t &n, const std::string &filename) {
+void stf::saveTraits(const std::vector<double> &traits, const size_t &ntraits, const std::string &filename) {
 
     // traits: vector of trait values
-    // n: number of traits per individual
+    // ntraits: number of traits per individual
     // filename: name of the file to save
 
     // Check
-    assert(traits.size() % n == 0u);
+    assert(traits.size() % ntraits == 0u);
 
     // Create output file stream
     std::ofstream file(filename);
@@ -314,11 +314,35 @@ void stf::saveTraits(const std::vector<double> &traits, const size_t &n, const s
     if (!file.is_open())
         throw std::runtime_error("Unable to open file " + filename);
 
-    // Write trait values to the file
-    for (size_t i = 0u; i < traits.size(); ++i) {
+    // Header
+    file << "id,";
+
+    // For each trait...
+    for (size_t j = 0u; j < ntraits; ++j) {
+
+        // Write trait name to header
+        file << "trait" << j + 1u;
+        if (j < ntraits - 1u) file << ',';
+        else file << '\n';
+
+    }
+
+    // Get number of individuals
+    const size_t popsize = traits.size() / ntraits;
+
+    // For each trait in each individual...
+    for (size_t i = 0u; i < ntraits * popsize; ++i) {
+
+        // Write individual identifier to file
+        if (i % ntraits == 0u) file << i / ntraits + 1u << ',';
+
+        // Write trait value to file
         file << traits[i];
-        if (i % n == n - 1u) file << '\n';
+
+        // Right separator
+        if (i % ntraits == ntraits - 1u) file << '\n';
         else file << ',';
+            
     }
 
     // Note: Each row is an individual, each column a trait.
@@ -384,18 +408,46 @@ void stf::saveAlleles(std::vector<std::bitset<64u> > &alleles, const size_t &pop
 
     } else {
 
-        // Target number of columns
-        const size_t ncols = 2u * nloci;
+        // First write a header
+        file << "id,";
 
-        // For each allele...
-        for (size_t i = 0u; i < N; ++i) {
+        // For each locus...
+        for (size_t i = 0u; i < nloci; ++i) {
 
-            // Write allele to the file as text
-            file << alleles[i / n].test(i % n);
+            // Add to the header
+            file << "locus" << i + 1u;
+            if (i < nloci - 1u) file << ',';
+            else file << '\n';
+
+        }
+
+        // Note: If saving as CSV, we save the combined genotype (0, 1 or 2),
+        // not the alleles separately.
+
+        // For each locus in each individual...
+        for (size_t i = 0u; i < nloci * popsize; ++i) {
+
+            // Write individual identifier to file
+            if (i % nloci == 0u) file << i / nloci + 1u << ',';
+
+            // Find the two haplotypes in the bitsets
+            const size_t j = i / 2u;
+            const size_t k = j + 1u;
+
+            // Extract alleles
+            const bool a = alleles[j / n].test(j % n);
+            const bool b = alleles[k / n].test(k % n);
+
+            // Check
+            assert(a + b <= 2u);
+
+            // Write combined genotype to file
+            file << a + b;
 
             // Right separator
-            if (i % ncols == ncols - 1u) file << '\n';
+            if (i % nloci == nloci - 1u) file << '\n';
             else file << ',';
+            
         }
     }
 
@@ -481,7 +533,7 @@ void doMain(const std::vector<std::string> &args) {
     stf::saveTraits(traits, pars.ntraits, "traits.csv");
     
     // Save matrix of alleles if needed
-    stf::saveAlleles(alleles, pars.popsize, pars.nloci, pars.binary ? "alleles.dat" : "alleles.csv", pars.binary);
+    stf::saveAlleles(alleles, pars.popsize, pars.nloci, pars.binary ? "alleles.dat" : "genotypes.csv", pars.binary);
     
     // Verbose if needed
     if (pars.verbose) std::cout << "Population generated successfully\n";

@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(useCaseWithParameterFile) {
     std::remove("parameters.txt");
     std::remove("paramlog.txt");
     std::remove("architecture.txt");
-    std::remove("alleles.csv");
+    std::remove("genotypes.csv");
     std::remove("traits.csv");
 
 }
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(useCaseWithParameterSaving) {
     std::remove("parameters.txt");
     std::remove("paramlog.txt");
     std::remove("architecture.txt");
-    std::remove("alleles.csv");
+    std::remove("genotypes.csv");
     std::remove("traits.csv");
 
 }
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(useCaseWithArchitectureLoading) {
     std::remove("parameters.txt");
     std::remove("paramlog.txt");
     std::remove("architecture.txt");
-    std::remove("alleles.csv");
+    std::remove("genotypes.csv");
     std::remove("traits.csv");
 
 }
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(useCaseWithArchitectureSaving) {
     std::remove("parameters.txt");
     std::remove("paramlog.txt");
     std::remove("architecture.txt");
-    std::remove("alleles.csv");
+    std::remove("genotypes.csv");
     std::remove("traits.csv");
 
 }
@@ -160,39 +160,68 @@ BOOST_AUTO_TEST_CASE(useCaseOutputFiles) {
     doMain({"program", "parameters.txt"});
 
     // Check that the expected output files are present
-    BOOST_CHECK_NO_THROW(tst::readtext("alleles.csv"));
+    BOOST_CHECK_NO_THROW(tst::readtext("genotypes.csv"));
     BOOST_CHECK_NO_THROW(tst::readtext("traits.csv"));
+
+    // Read values in
+    std::vector<double> genotypes = tst::readcsv("genotypes.csv");
+    std::vector<double> traits = tst::readcsv("traits.csv");
+
+    // Check that the right number of values are present
+    BOOST_CHECK_EQUAL(genotypes.size(), 4u * 3u);
+    BOOST_CHECK_EQUAL(traits.size(), 2u * 3u);
+
+    // Note: Here alleles are saved as genotypes (0, 1 or 2), not as separate alleles.
+    // We also must keep in mind that one of the columns is the individual identifier.
+
+    // Prepare to check
+    bool iswrong = false;
+
+    // For each genotype...
+    for (size_t i = 0u; i < genotypes.size(); ++i) {
+
+        // Skip individual identifier column
+        if (i % 4u == 0u) continue;
+
+        // Read it
+        const size_t n = static_cast<size_t>(genotypes[i]);
+
+        // If out of bounds...
+        if (n > 2u) {
+            
+            // Flag and exit
+            iswrong = true;
+            break;
+
+        }
+    }
+
+    // Make sure everything is fine
+    BOOST_CHECK(!iswrong);
 
     // Cleanup
     std::remove("parameters.txt");
     std::remove("paramlog.txt");
     std::remove("architecture.txt");
-    std::remove("alleles.csv");
+    std::remove("genotypes.csv");
     std::remove("traits.csv");
 
 }
 
-// Test that the right output files are being written
+// Test that the right output files are being written in binary format
 BOOST_AUTO_TEST_CASE(useCaseOutputFilesBinary) {
 
     // Write a parameter file specifying to save data
     tst::write("parameters.txt", "popsize 3\nnlocipertrait 3\nbinary 1");
 
-    // Run the simulation
-    doMain({"program", "parameters.txt"});
-
-    // Check that the expected output files are present
-    BOOST_CHECK_NO_THROW(tst::read("alleles.dat"));
-    BOOST_CHECK_NO_THROW(tst::readtext("traits.csv"));
-
-    // Read binary alleles into encoded decimal numbers
-    std::vector<double> alleles = tst::read("alleles.dat");
-
     // Number of bits that should have been saved
     const size_t nbits = 3u * 3u * 2u;
 
-    // Way below 64 (or even 32) bits, so should be saved in one number
-    BOOST_CHECK_EQUAL(alleles.size(), 1u);
+    // Run the simulation
+    doMain({"program", "parameters.txt"});
+
+    // Read binary alleles into encoded decimal numbers
+    std::vector<double> alleles = tst::readbin("alleles.dat");
 
     // Extract all the bits
     std::bitset<64u> bits(alleles[0u]);
@@ -200,12 +229,10 @@ BOOST_AUTO_TEST_CASE(useCaseOutputFilesBinary) {
     // Test maximum number of bits equal to one
     BOOST_CHECK(bits.count() <= nbits);
 
-    // Prepare to count
-    size_t trailing = 0u;
-
     // Count trailing bits
+    size_t trailing = 0u;
     for (size_t i = nbits; i < bits.size(); ++i)
-        trailing += bits.test(i);
+        trailing += bits.test(i);        
 
     // Check that they are all zeros
     BOOST_CHECK_EQUAL(trailing, 0u);
@@ -235,7 +262,7 @@ BOOST_AUTO_TEST_CASE(useCaseWithVerbose) {
     std::remove("parameters.txt");
     std::remove("paramlog.txt");
     std::remove("architecture.txt");
-    std::remove("alleles.csv");
+    std::remove("genotypes.csv");
     std::remove("traits.csv");
 
 }
@@ -253,7 +280,7 @@ BOOST_AUTO_TEST_CASE(useCaseWithEdges) {
     std::remove("parameters.txt");
     std::remove("paramlog.txt");
     std::remove("architecture.txt");
-    std::remove("alleles.csv");
+    std::remove("genotypes.csv");
     std::remove("traits.csv");
 
 }
@@ -279,7 +306,7 @@ BOOST_AUTO_TEST_CASE(useCaseWithMultipleTraits) {
     std::remove("parameters.txt");
     std::remove("paramlog.txt");
     std::remove("architecture.txt");
-    std::remove("alleles.csv");
+    std::remove("genotypes.csv");
     std::remove("traits.csv");
 
 }
@@ -317,7 +344,7 @@ BOOST_AUTO_TEST_CASE(useCaseWithGivenSampling) {
     std::remove("parameters.txt");
     std::remove("paramlog.txt");
     std::remove("architecture.txt");
-    std::remove("alleles.csv");
+    std::remove("genotypes.csv");
     std::remove("traits.csv");
 
 }
@@ -335,7 +362,7 @@ BOOST_AUTO_TEST_CASE(useCaseWithBernoulliSampling) {
     std::remove("parameters.txt");
     std::remove("paramlog.txt");
     std::remove("architecture.txt");
-    std::remove("alleles.csv");
+    std::remove("genotypes.csv");
     std::remove("traits.csv");
 
 }
@@ -353,7 +380,7 @@ BOOST_AUTO_TEST_CASE(useCaseWithBinomialSampling) {
     std::remove("parameters.txt");
     std::remove("paramlog.txt");
     std::remove("architecture.txt");
-    std::remove("alleles.csv");
+    std::remove("genotypes.csv");
     std::remove("traits.csv");
 
 }
@@ -371,7 +398,7 @@ BOOST_AUTO_TEST_CASE(useCaseWithBinomialSamplingHighMutationRate) {
     std::remove("parameters.txt");
     std::remove("paramlog.txt");
     std::remove("architecture.txt");
-    std::remove("alleles.csv");
+    std::remove("genotypes.csv");
     std::remove("traits.csv");
 
 }
@@ -389,7 +416,7 @@ BOOST_AUTO_TEST_CASE(useCaseWithBinomialSamplingFullShuffle) {
     std::remove("parameters.txt");
     std::remove("paramlog.txt");
     std::remove("architecture.txt");
-    std::remove("alleles.csv");
+    std::remove("genotypes.csv");
     std::remove("traits.csv");
 
 }
@@ -407,7 +434,7 @@ BOOST_AUTO_TEST_CASE(useCaseWithGeometricSampling) {
     std::remove("parameters.txt");
     std::remove("paramlog.txt");
     std::remove("architecture.txt");
-    std::remove("alleles.csv");
+    std::remove("genotypes.csv");
     std::remove("traits.csv");
 
 }
@@ -425,7 +452,7 @@ BOOST_AUTO_TEST_CASE(useCaseWithGeometricSamplingHighMutationRate) {
     std::remove("parameters.txt");
     std::remove("paramlog.txt");
     std::remove("architecture.txt");
-    std::remove("alleles.csv");
+    std::remove("genotypes.csv");
     std::remove("traits.csv");
 
 }
@@ -443,7 +470,7 @@ BOOST_AUTO_TEST_CASE(useCaseWithFullSampling) {
     std::remove("parameters.txt");
     std::remove("paramlog.txt");
     std::remove("architecture.txt");
-    std::remove("alleles.csv");
+    std::remove("genotypes.csv");
     std::remove("traits.csv");
 
 }

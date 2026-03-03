@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(useCaseOutputFiles) {
     BOOST_CHECK_NO_THROW(tst::readtext("traits.csv"));
 
     // Read values in
-    std::vector<double> alleles = tst::readcsv("genotypes.csv");
+    std::vector<double> alleles = tst::readcsv("genotypes.csv", false);
     std::vector<double> traits = tst::readcsv("traits.csv");
 
     // Check that the right number of values are present

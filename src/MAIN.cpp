@@ -314,6 +314,19 @@ void stf::saveTraits(const std::vector<double> &traits, const size_t &n, const s
     if (!file.is_open())
         throw std::runtime_error("Unable to open file " + filename);
 
+    // Header
+    file << "id,";
+
+    // For each trait...
+    for (size_t j = 0u; j < n; ++j) {
+
+        // Write trait name to header
+        file << "trait" << j + 1u;
+        if (j < n - 1u) file << ',';
+        else file << '\n';
+
+    }
+
     // Write trait values to the file
     for (size_t i = 0u; i < traits.size(); ++i) {
         file << traits[i];

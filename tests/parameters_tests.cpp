@@ -26,6 +26,7 @@ BOOST_AUTO_TEST_CASE(readParameters)
     std::ostringstream content;
 
     // Add lines
+    content << "nrepl 1\n";
     content << "popsize 10\n";
     content << "ntraits 3\n";
     content << "allfreq 0.1\n";
@@ -53,6 +54,7 @@ BOOST_AUTO_TEST_CASE(readParameters)
     Parameters pars("parameters.txt");
 
     // Check that the parameters have been updated
+    BOOST_CHECK_EQUAL(pars.nrepl, 1u);
     BOOST_CHECK_EQUAL(pars.popsize, 10u);
     BOOST_CHECK_EQUAL(pars.ntraits, 3u);
     BOOST_CHECK_EQUAL(pars.allfreq, 0.1);
@@ -107,6 +109,24 @@ BOOST_AUTO_TEST_CASE(readInvalidParameters)
 
     // Remove files
     std::remove("parameters.txt");
+
+}
+
+// Test error upon invalid number of replicates
+BOOST_AUTO_TEST_CASE(readInvalidNRepl)
+{
+
+    // Write a file with invalid number of replicates
+    tst::write("p1.txt", "nrepl 0\n");
+    tst::write("p2.txt", "nrepl 10 10\n");
+
+    // Check
+    tst::checkError([&]() { Parameters pars("p1.txt"); }, "Parameter nrepl must be strictly positive in line 1 of file p1.txt");
+    tst::checkError([&]() { Parameters pars("p2.txt"); }, "Too many values for parameter nrepl in line 1 of file p2.txt");
+
+    // Remove files
+    std::remove("p1.txt");
+    std::remove("p2.txt");
 
 }
 

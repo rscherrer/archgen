@@ -6,6 +6,7 @@ Note that hereafter, "positive" means ***including zero***, while "strictly posi
 
 | Parameter name | Default value(s) | Accepted values | No. values | Description | Notes |
 |--|--|--|--|--|--|
+| `nrepl` | `1` | Strictly positive integers | 1 | Number of replicates to run | |
 | `popsize` | `10` | Strictly positive integers | 1 | Number of individuals in the population | |
 | `ntraits` | `1` | Strictly positive integers | 1 | Number of traits in the model | |
 | `allfreq` | `0` | Decimals from zero to one | 1 | Initial frequency of the 1-allele across all loci | |

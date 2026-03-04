@@ -29,6 +29,7 @@ struct Parameters {
     void checkinternal() const;
 
     // Parameters
+    size_t nrepl;                           // number of replicates
     size_t popsize;                         // population size
     double allfreq;                         // initial frequency of allele 1
     double effect;                          // standard deviation of additive effect sizes of loci on traits

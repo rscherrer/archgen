@@ -474,3 +474,114 @@ BOOST_AUTO_TEST_CASE(useCaseWithFullSampling) {
     std::remove("traits.csv");
 
 }
+
+// Test with multiple replicates
+BOOST_AUTO_TEST_CASE(useCaseWithMultipleReplicates) {
+
+    // Write a parameter file with multiple replicates
+    tst::write("parameters.txt", "nrepl 3");
+
+    // Check that the program runs
+    BOOST_CHECK_NO_THROW(doMain({"program", "parameters.txt"}));
+
+    // Check that the output files have been written
+    BOOST_CHECK_NO_THROW(tst::readtext("architecture_1.txt"));
+    BOOST_CHECK_NO_THROW(tst::readtext("architecture_2.txt"));
+    BOOST_CHECK_NO_THROW(tst::readtext("architecture_3.txt"));
+    BOOST_CHECK_NO_THROW(tst::readtext("genotypes_1.csv"));
+    BOOST_CHECK_NO_THROW(tst::readtext("genotypes_2.csv"));
+    BOOST_CHECK_NO_THROW(tst::readtext("genotypes_3.csv"));
+    BOOST_CHECK_NO_THROW(tst::readtext("traits_1.csv"));
+    BOOST_CHECK_NO_THROW(tst::readtext("traits_2.csv"));
+    BOOST_CHECK_NO_THROW(tst::readtext("traits_3.csv"));
+
+    // Cleanup
+    std::remove("parameters.txt");
+    std::remove("paramlog.txt");
+    std::remove("architecture_1.txt");
+    std::remove("architecture_2.txt");
+    std::remove("architecture_3.txt");
+    std::remove("genotypes_1.csv");
+    std::remove("genotypes_2.csv");
+    std::remove("genotypes_3.csv");
+    std::remove("traits_1.csv");
+    std::remove("traits_2.csv");
+    std::remove("traits_3.csv");
+
+}
+
+// Test with multiple replicates and supplied architecture
+BOOST_AUTO_TEST_CASE(useCaseWithMultipleReplicatesSuppliedArchitecture) {
+
+    // Write a parameter file that saves architecture
+    tst::write("parameters.txt", "savearch 1");
+
+    // Run a simulation to save the architecture
+    doMain({"program", "parameters.txt"});
+
+    // Write a parameter file with multiple replicates
+    tst::write("parameters.txt", "nrepl 3\nloadarch 1");
+
+    // Check that the program runs
+    BOOST_CHECK_NO_THROW(doMain({"program", "parameters.txt"}));
+
+    // Check that the output files have been written
+    BOOST_CHECK_NO_THROW(tst::readtext("architecture.txt"));
+    BOOST_CHECK_NO_THROW(tst::readtext("architecture_1.txt"));
+    BOOST_CHECK_NO_THROW(tst::readtext("architecture_2.txt"));
+    BOOST_CHECK_NO_THROW(tst::readtext("architecture_3.txt"));
+    BOOST_CHECK_NO_THROW(tst::readtext("genotypes_1.csv"));
+    BOOST_CHECK_NO_THROW(tst::readtext("genotypes_2.csv"));
+    BOOST_CHECK_NO_THROW(tst::readtext("genotypes_3.csv"));
+    BOOST_CHECK_NO_THROW(tst::readtext("traits_1.csv"));
+    BOOST_CHECK_NO_THROW(tst::readtext("traits_2.csv"));
+    BOOST_CHECK_NO_THROW(tst::readtext("traits_3.csv"));
+
+    // Check that all architecture files are the same
+    const std::string arch1 = tst::readtext("architecture.txt");
+    const std::string arch2 = tst::readtext("architecture_1.txt");
+    const std::string arch3 = tst::readtext("architecture_2.txt");
+    const std::string arch4 = tst::readtext("architecture_3.txt");
+    BOOST_CHECK_EQUAL(arch1, arch2);
+    BOOST_CHECK_EQUAL(arch1, arch3);
+    BOOST_CHECK_EQUAL(arch1, arch4);
+
+    // Cleanup
+    std::remove("parameters.txt");
+    std::remove("paramlog.txt");
+    std::remove("architecture.txt");
+    std::remove("architecture_1.txt");
+    std::remove("architecture_2.txt");
+    std::remove("architecture_3.txt");
+    std::remove("genotypes_1.csv");
+    std::remove("genotypes_2.csv");
+    std::remove("genotypes_3.csv");
+    std::remove("traits_1.csv");
+    std::remove("traits_2.csv");
+    std::remove("traits_3.csv");
+
+}
+
+// Test that error when architecture supplied with different number of traits than specified
+BOOST_AUTO_TEST_CASE(abuseSuppliedArchitectureWithDifferentNumberOfTraits) {
+
+    // Write a parameter file that saves architecture
+    tst::write("parameters.txt", "savearch 1");
+
+    // Run a simulation to save the architecture
+    doMain({"program", "parameters.txt"});
+
+    // Write a parameter file with different number of traits
+    tst::write("parameters.txt", "loadarch 1\nntraits 2\nnlocipertrait 3 3\nnedgespertrait 3 3\nskews 1 1\nepistasis 0.1 0.1\ndominance 0.4 0.4\nenvnoise 0.7 0.7");
+
+    // Check error
+    BOOST_CHECK_THROW(doMain({"program", "parameters.txt"}), std::runtime_error);
+
+    // Cleanup
+    std::remove("parameters.txt");
+    std::remove("paramlog.txt");
+    std::remove("architecture.txt");
+    std::remove("genotypes.csv");
+    std::remove("traits.csv");
+
+}

@@ -30,6 +30,8 @@ To run a simulation with custom parameters, use:
 
 where `parameters.txt` is a text file containing a list of parameter names and values.
 
+Different options are available to run multiple simulations with different parameter files. We provide example scripts for that in the `run/` folder (see [here](run/README.md) for details).
+
 ### Parameters
 
 The parameter file should look like this:

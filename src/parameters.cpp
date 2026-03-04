@@ -168,7 +168,6 @@ void Parameters::override(const Architecture &arch) {
     // Override key hyperparameters
     nloci = arch.nloci;
     nedges = arch.nedges;
-    ntraits = arch.ntraits;
     nlocipertrait = arch.nlocipertrait;
     nedgespertrait = arch.nedgespertrait;
 

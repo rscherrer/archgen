@@ -168,6 +168,15 @@ void Architecture::read(const std::string& filename) {
 
 }
 
+// Function to check that the architecture is compatible with the parameters
+void Architecture::test(const Parameters &pars) const {
+
+    // Error if the number of traits does not match
+    if (ntraits != pars.ntraits)
+        throw std::runtime_error("Number of traits in the architecture does not match the number of traits in the parameters");
+
+}
+
 // Function to generate a genetic architecture
 void Architecture::generate(const Parameters &pars) {
 

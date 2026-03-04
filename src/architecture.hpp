@@ -22,6 +22,7 @@ struct Architecture {
     // Functions
     void read(const std::string&);
     void generate(const Parameters&);
+    void test(const Parameters&) const;
     void check() const;
     void save(const std::string&) const;
 

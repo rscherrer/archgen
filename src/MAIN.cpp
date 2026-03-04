@@ -459,6 +459,26 @@ void stf::saveAlleles(std::vector<std::bitset<64u> > &alleles, const size_t &pop
     
 }
 
+// Function to add replicate to file name
+std::string addrepl(std::string filename, const std::string &ext, const size_t &k, const bool &ison, const char &sep = '_') {
+
+    // filename: base name of the file
+    // ext: file extension
+    // k: replicate number
+    // ison: whether to include the replicate number
+    // sep: separator between filename and replicate number
+
+    // Add replicate if needd
+    if (ison) filename += sep + std::to_string(k + 1u);
+
+    // Add extension
+    filename += '.' + ext;
+
+    // Exit
+    return filename;
+
+}
+
 // Main function
 void doMain(const std::vector<std::string> &args) {
 
@@ -474,68 +494,89 @@ void doMain(const std::vector<std::string> &args) {
     // Create parameters (from file if needed)
     Parameters pars(parfile);
 
+    // Check
+    pars.check();
+
+    // Save the parameters if needed
+    if (pars.savepars) pars.save("paramlog.txt");
+
     // Verbose if needed
     if (args.size() == 2u) std::cout << "Parameters read in succesfully\n";
 
     // Seed the random number generator
     rnd::rng.seed(pars.seed);
 
-    // Architecture file
-    const std::string archfile = pars.loadarch ? "architecture.txt" : "";
-
     // Create a simple genetic architecture or read from file if needed
-    Architecture arch(archfile);
+    Architecture arch(pars.loadarch ? "architecture.txt" : "");
 
-    // Simulate a (complicated) genetic architecture if needed
-    if (!pars.loadarch) arch.generate(pars);
+    // Check that the architecture is compatible with the parameters
+    if (pars.loadarch) arch.test(pars);
 
-    // If needed...
-    if (pars.verbose) {
+    // For each replicate...
+    for (size_t k = 0u; k < pars.nrepl; ++k) {
+
+        // Simulate a (complicated) genetic architecture if needed
+        if (!pars.loadarch) arch.generate(pars);
+
+        // If needed...
+        if (pars.verbose) {
+            
+            // Verbose
+            std::cout << "Replicate " << k + 1u << " of " << pars.nrepl << '\n';
+            std::cout << "Genetic architecture ";
+            std::cout << (pars.loadarch ? "read in" : "generated");
+            std::cout << " successfully\n";
+
+        }
+
+        // Current parameters
+        Parameters parsk = pars;
+
+        // Override general parameters if needed
+        parsk.override(arch);
+
+        // Check
+        arch.check();
+        parsk.check();
+
+        // Output file name
+        const std::string archfile = addrepl("architecture", "txt", k, pars.nrepl > 1u);
+
+        // Save the architecture if needed
+        if (pars.savearch) arch.save(archfile);
+
+        // Total number of bits needed
+        const size_t N = pars.popsize * pars.nloci * 2u;
+
+        // Number of bitsets needed
+        const size_t n = N / 64u;
+
+        // Create a vector of bitsets
+        std::vector<std::bitset<64u> > alleles(n + 1u);
+
+        // Note: The size of a bitset must be hard-coded in C++.
         
-        // Verbose
-        std::cout << "Genetic architecture ";
-        std::cout << (pars.loadarch ? "read in" : "generated");
-        std::cout << " successfully\n";
+        // Throw mutations
+        gen::mutate(alleles, pars.allfreq, N, pars.sampling, pars.ratio);
 
-    }   
+        // Develop genotypes into phenotypes
+        const std::vector<double> traits = gen::develop(alleles, pars, arch, N);
 
-    // Override general parameters if needed
-    pars.override(arch);
+        // Output file name
+        const std::string traitfile = addrepl("traits", "csv", k, pars.nrepl > 1u);
 
-    // Check
-    arch.check();
-    pars.check();
+        // Save trait values to file
+        stf::saveTraits(traits, pars.ntraits, traitfile);
+        
+        // Output file name
+        const std::string genfile = addrepl("genotypes", "csv", k, pars.nrepl > 1u);
+        const std::string allfile = addrepl("alleles", "dat", k, pars.nrepl > 1u);
 
-    // Save the architecture if needed
-    if (pars.savearch) arch.save("architecture.txt");
+        // Save matrix of alleles if needed
+        stf::saveAlleles(alleles, pars.popsize, pars.nloci, pars.binary ? allfile : genfile, pars.binary);
+        
+        // Verbose if needed
+        if (pars.verbose) std::cout << "Population generated successfully\n";
 
-    // Save the parameters if needed
-    if (pars.savepars) pars.save("paramlog.txt");
-
-    // Total number of bits needed
-    const size_t N = pars.popsize * pars.nloci * 2u;
-
-    // Number of bitsets needed
-    const size_t n = N / 64u;
-
-    // Create a vector of bitsets
-    std::vector<std::bitset<64u> > alleles(n + 1u);
-
-    // Note: The size of a bitset must be hard-coded in C++.
-    
-    // Throw mutations
-    gen::mutate(alleles, pars.allfreq, N, pars.sampling, pars.ratio);
-
-    // Develop genotypes into phenotypes
-    const std::vector<double> traits = gen::develop(alleles, pars, arch, N);
-
-    // Save trait values to file
-    stf::saveTraits(traits, pars.ntraits, "traits.csv");
-    
-    // Save matrix of alleles if needed
-    stf::saveAlleles(alleles, pars.popsize, pars.nloci, pars.binary ? "alleles.dat" : "genotypes.csv", pars.binary);
-    
-    // Verbose if needed
-    if (pars.verbose) std::cout << "Population generated successfully\n";
-
+    }
 }

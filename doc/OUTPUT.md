@@ -6,15 +6,15 @@ If `savepars` is `1` the program saves the parameters it has used to run the sim
 
 ### Genetic architecture
 
-If `savearch` is `1`, the program saves the genetic architecture of the traits in a file called `architecture.txt`. This file contains the list of loci affecting each trait, the edges in the gene network of each trait, and the effect sizes, dominance coefficients and weights of all loci and edges. See [here](ARCHITECTURE.md) for details about how this file is formatted.
+If `savearch` is `1`, the program saves the genetic architecture of the traits in a file called `architecture.txt` (or `architecture_<replicate_number>.txt` if multiple replicates are run). This file contains the list of loci affecting each trait, the edges in the gene network of each trait, and the effect sizes, dominance coefficients and weights of all loci and edges. See [here](ARCHITECTURE.md) for details about how this file is formatted.
 
 ### Trait values
 
-The program saves the trait values of all individuals in a file called `traits.csv`. This file contains one row per individual and one column per trait, with the value in each cell corresponding to the trait value of the individual for that trait.
+The program saves the trait values of all individuals in a file called `traits.csv` (or `traits_<replicate_number>.csv` if multiple replicates are run). This file contains one row per individual and one column per trait, with the value in each cell corresponding to the trait value of the individual for that trait.
 
 ### Allele data
 
-The program saves the genotypes of all individuals in a file called `genotypes.csv`, if the `binary` parameter is set to `0`, or `alleles.dat` if the `binary` parameter is set to `1`. 
+The program saves the genotypes of all individuals in a file called `genotypes.csv` (or `genotypes_<replicate_number>.csv` if multiple replicates are run), if the `binary` parameter is set to `0`, or `alleles.dat` (or `alleles_<replicate_number>.dat` if multiple replicates are run) if the `binary` parameter is set to `1`. 
 
 If `binary` is set to `0`, the file `genotypes.csv` contains a table with one row per individual and one column per locus. Each cell then contains the genotype of an individual for a given locus, which is the sum of two alleles (0, 1 or 2). Like so:
 

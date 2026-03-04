@@ -505,3 +505,33 @@ BOOST_AUTO_TEST_CASE(errorWhenGeneratingArchitecture) {
     tst::checkError([&]() { arch.generate(pars); }, "Not all requested edges could be made for trait 1 with the given parameters");
 
 }
+
+// Test that error when the number of edges in the architecture does not match the number of edges in the parameters
+BOOST_AUTO_TEST_CASE(errorWhenTestingArchitecture) {
+
+    // Create parameters
+    Parameters pars;
+    pars.ntraits = 1u;
+    pars.nlocipertrait = {100u};
+    pars.nedgespertrait = {100u};
+    pars.skews = {1.0};
+
+    // Create architecture with different number of edges
+    Architecture arch;
+    arch.nloci = 100u;
+    arch.nedges = 50u;
+    arch.ntraits = 2u;
+    arch.nlocipertrait = {100u, 0u};
+    arch.nedgespertrait = {50u, 0u};
+    arch.traitids = std::vector<size_t>(100u, 0u);
+    arch.traitids[0u] = 1u;
+    arch.effects = std::vector<double>(100u, 0.1);
+    arch.dominances = std::vector<double>(100u, 0.01);
+    arch.from = std::vector<size_t>(50u, 0u);
+    arch.to = std::vector<size_t>(50u, 1u);
+    arch.weights = std::vector<double>(50u, 0.5);
+
+    // Check that it throws an error
+    tst::checkError([&]() { arch.test(pars); }, "Number of traits in the architecture does not match the number of traits in the parameters");
+
+}

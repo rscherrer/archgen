@@ -9,7 +9,7 @@ These are possible small changes for the code as it is now.
 * The `check()` function of the `Architecture` class loops a lot to perform assertions. In release mode, these assertions are not performed but the loops are still there. Is there a way to avoid that?
 * I think technically the `ratio` parameter will not allow full shuffle ever if it is greater than 0.5 (because when more than half of the alleles must mutate we first mutate everything, then mutate back some). Change accepted value?
 * Look into normalizing epistatic effects? See the [speciome](https://gitub.com/rscherrer/speciome) project for details.
-* Test output file size?
+* What about taking genotypes as input and generating traits only?
 
 ### Documentation
 

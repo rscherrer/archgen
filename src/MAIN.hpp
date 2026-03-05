@@ -25,6 +25,9 @@ namespace stf {
 // Name space for genetic processing functions
 namespace gen {
 
+    // Function to import matrix of alleles from file
+    void import(std::vector<std::bitset<64u> >&, const std::string&, const size_t&);
+
     // Function to throw mutations into the matrix of alleles
     void mutate(std::vector<std::bitset<64u> >&, const double&, const size_t&, const size_t&, const double& = 0.25);
 

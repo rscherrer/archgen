@@ -10,7 +10,92 @@
 #include <cassert>
 #include <algorithm>
 #include <fstream>
+#include <sstream>
 #include <numeric>
+
+// Function to import matrix of alleles from file
+void gen::import(std::vector<std::bitset<64u> > &alleles, const std::string &filename, const size_t &N) {
+
+    // alleles: vector of bitsets representing matrix of alleles
+    // filename: name of the file to import
+    // N: total number of alleles in the population
+
+    // Create input file stream
+    std::ifstream file(filename);
+
+    // Check that it is open
+    if (!file.is_open())
+        throw std::runtime_error("Unable to open file " + filename);
+
+    // Skip header
+    std::string line;
+    std::getline(file, line);
+
+    // Number of bits per bitset
+    const size_t n = 64u;
+
+    // Number of diploid genotype entries expected in the file
+    const size_t ngenotypes = N / 2u;
+
+    // For each line in the file...
+    size_t i = 0u;
+    while (std::getline(file, line)) {
+
+        // Parse line as CSV
+        std::stringstream stream(line);
+        std::string token;
+
+        // Skip the first token (identifier column)
+        if (!std::getline(stream, token, ','))
+            throw std::runtime_error("Invalid format in file " + filename);
+
+        // Parse only genotype columns
+        while (std::getline(stream, token, ',')) {
+
+            // Check that file does not contain too many genotype entries
+            if (i >= ngenotypes)
+                throw std::runtime_error("Incorrect number of genotypes read from file " + filename);
+
+            // Convert token to integer
+            int value = 0;
+            try {
+                value = std::stoi(token);
+            }
+            catch (const std::invalid_argument&) {
+                throw std::runtime_error("Invalid format in file " + filename);
+            }
+            catch (const std::out_of_range&) {
+                throw std::runtime_error("Invalid format in file " + filename);
+            }
+
+            // Check that it is a valid genotype
+            if (value < 0 || value > 2)
+                throw std::runtime_error("Invalid genotype value in file " + filename);
+
+            // Set the corresponding bits in the bitsets
+            if (value == 1) alleles[i / n].set(i % n);
+            else if (value == 2) {
+                alleles[i / n].set(i % n);
+                alleles[(i + ngenotypes) / n].set((i + ngenotypes) % n);
+            }
+
+            // Move to the next allele
+            ++i;
+
+        }
+    }
+
+    // Check that we have read the expected number of genotype entries
+    if (i != ngenotypes)
+        throw std::runtime_error("Incorrect number of genotypes read from file " + filename);
+
+    // Close the file
+    file.close();
+
+    // Check
+    assert(!file.is_open());
+
+}
 
 // Function to throw mutations into the matrix of alleles
 void gen::mutate(std::vector<std::bitset<64u> > &alleles, const double &mu, const size_t &N, const size_t &imode, const double &ratio) {
@@ -556,8 +641,11 @@ void doMain(const std::vector<std::string> &args) {
 
         // Note: The size of a bitset must be hard-coded in C++.
         
+        // Import matrix of alleles if needed
+        if (pars.import) gen::import(alleles, "genotypes.csv", N);
+
         // Throw mutations
-        gen::mutate(alleles, pars.allfreq, N, pars.sampling, pars.ratio);
+        gen::mutate(alleles, pars.mutation, N, pars.sampling, pars.ratio);
 
         // Develop genotypes into phenotypes
         const std::vector<double> traits = gen::develop(alleles, pars, arch, N);

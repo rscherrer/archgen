@@ -40,7 +40,7 @@ The parameter file should look like this:
 nrepl 1
 popsize 100
 ntraits 3
-allfreq 0.2
+mutation 0.2
 effect 0.1
 weight 0.1
 nlocipertrait 100 100 100
@@ -52,6 +52,7 @@ envnoise 0.2 0.2 0.2
 sampling 1
 ratio 0.25
 seed 12345
+import 0
 loadarch 0
 savearch 1
 savepars 1
@@ -68,6 +69,12 @@ The program simulates trait values based on a genetic architecture, composed of 
 ### Output
 
 The program outputs two main data files. The first, `traits.csv`, contains the trait values of all individuals in the population (individuals in rows, traits in columns). The second output file saved is `genotypes.csv` (if `binary` is set to `0`), and contains the genotypes of all individuals in the population (individuals in rows, loci in columns). Alternatively, if `binary` is `1`, an array of bits representing all (diploid) alleles (two bits saved consecutively for each locus in each individual) is saved to a file called `alleles.dat`. If the number of replicate simulations requested by `nrepl` is greater than one, these will be saved in separate output files, whose names will be suffixed with the replicate number. See [here](doc/OUTPUT.md) for details.
+
+### Input genotype matrix
+
+Note that the program can also take as input a genotype matrix (instead of generating one randomly) if the `import` parameter is set to `1`. In that case, the program will look for a file called `genotypes.csv` in the working directory, and read the genotypes from it. The format of this file should be the same as the output `genotypes.csv` file (see [here](doc/OUTPUT.md) for details). If the `import` parameter is set to `0`, a random genotype matrix will be generated based on parameters supplied in the regular parameter file (as described [here](doc/PARAMETERS.md)). This option is not implemented for a binary input file.
+
+Note that random mutations can be added to the input genotype matrix, as long as the `mutation` parameter is not zero.
 
 ## Tests
 

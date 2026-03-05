@@ -20,7 +20,7 @@ size_t clockseed() {
 Parameters::Parameters(const std::string& filename) :
     nrepl(1u),
     popsize(10u),
-    allfreq(0.0),
+    mutation(0.0),
     effect(0.0),
     weight(0.0),
     ntraits(1u),
@@ -33,6 +33,7 @@ Parameters::Parameters(const std::string& filename) :
     sampling(0u),
     ratio(0.25),
     seed(clockseed()),
+    import(false),
     loadarch(false),
     savearch(true),
     savepars(true),
@@ -101,7 +102,7 @@ void Parameters::read(const std::string &filename) {
         // Read the parameter value(s)
         if (name == "nrepl") reader.readvalue<size_t>(nrepl, chk::strictpos<size_t>);
         else if (name == "popsize") reader.readvalue<size_t>(popsize, chk::strictpos<size_t>);
-        else if (name == "allfreq") reader.readvalue<double>(allfreq, chk::proportion<double>);
+        else if (name == "mutation") reader.readvalue<double>(mutation, chk::proportion<double>);
         else if (name == "effect") reader.readvalue<double>(effect, chk::positive<double>);
         else if (name == "weight") reader.readvalue<double>(weight, chk::positive<double>);
         else if (name == "ntraits") reader. readvalue<size_t>(ntraits, chk::strictpos<size_t>);
@@ -114,6 +115,7 @@ void Parameters::read(const std::string &filename) {
         else if (name == "sampling") reader.readvalue<size_t>(sampling, chk::zerotothree<size_t>);
         else if (name == "ratio") reader.readvalue<double>(ratio, chk::proportion<double>);
         else if (name == "seed") reader.readvalue<size_t>(seed);
+        else if (name == "import") reader.readvalue<bool>(import);
         else if (name == "loadarch") reader.readvalue<bool>(loadarch);
         else if (name == "savearch") reader.readvalue<bool>(savearch);
         else if (name == "savepars") reader.readvalue<bool>(savepars);
@@ -209,7 +211,7 @@ void Parameters::check() const {
     assert(popsize > 0u);
     assert(ntraits > 0u);
     assert(ntraits <= nloci);
-    assert(allfreq >= 0.0 && allfreq <= 1.0);
+    assert(mutation >= 0.0 && mutation <= 1.0);
     assert(effect >= 0.0);
     assert(weight >= 0.0);
     assert(nlocipertrait.size() == ntraits);
@@ -251,7 +253,7 @@ void Parameters::save(const std::string &filename) const {
     // Write parameters to the file
     file << "nrepl " << nrepl << '\n';
     file << "popsize " << popsize << '\n';    
-    file << "allfreq " << allfreq << '\n';
+    file << "mutation " << mutation << '\n';
     file << "effect " << effect << '\n';
     file << "ntraits " << ntraits << '\n';
     file << "nlocipertrait";
@@ -275,6 +277,7 @@ void Parameters::save(const std::string &filename) const {
     file << "sampling " << sampling << '\n';
     file << "ratio " << ratio << '\n';
     file << "seed " << seed << '\n';
+    file << "import " << import << '\n';
     file << "loadarch " << loadarch << '\n';
     file << "savearch " << savearch << '\n';
     file << "savepars " << savepars << '\n';

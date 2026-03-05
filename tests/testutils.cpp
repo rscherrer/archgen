@@ -3,10 +3,11 @@
 #include "testutils.hpp"
 
 // Function to read a CSV file into a vector of doubles
-std::vector<double> tst::readcsv(const std::string &filename, const bool &head) {
+std::vector<double> tst::readcsv(const std::string &filename, const bool &head, const bool &skipid) {
 
     // filename: the name of the file to read
     // head: whether the file has a header row
+    // skipid: whether to skip the first column (e.g. row identifier)
 
     // Open the input file
     std::ifstream file(filename.c_str(), std::ios::in);
@@ -30,6 +31,11 @@ std::vector<double> tst::readcsv(const std::string &filename, const bool &head) 
         // Split each line by commas
         std::stringstream stream(line);
         std::string token;
+
+        // Skip first column if requested (e.g. row identifier)
+        if (skipid && !std::getline(stream, token, ','))
+            throw std::runtime_error("Invalid format in file " + filename);
+
         while (std::getline(stream, token, ',')) {
 
             // Skip empty tokens

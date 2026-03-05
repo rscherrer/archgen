@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE(readParameters)
     content << "nrepl 1\n";
     content << "popsize 10\n";
     content << "ntraits 3\n";
-    content << "allfreq 0.1\n";
+    content << "mutation 0.1\n";
     content << "effect 0.5\n";
     content << "weight 0.3\n";
     content << "nlocipertrait 5 10 15\n";
@@ -41,6 +41,7 @@ BOOST_AUTO_TEST_CASE(readParameters)
     content << "sampling 2\n";
     content << "ratio 0.25\n";
     content << "seed 12345\n";
+    content << "import 0\n";
     content << "loadarch 1\n";
     content << "savearch 0\n";
     content << "savepars 1\n";
@@ -57,7 +58,7 @@ BOOST_AUTO_TEST_CASE(readParameters)
     BOOST_CHECK_EQUAL(pars.nrepl, 1u);
     BOOST_CHECK_EQUAL(pars.popsize, 10u);
     BOOST_CHECK_EQUAL(pars.ntraits, 3u);
-    BOOST_CHECK_EQUAL(pars.allfreq, 0.1);
+    BOOST_CHECK_EQUAL(pars.mutation, 0.1);
     BOOST_CHECK_EQUAL(pars.effect, 0.5);
     BOOST_CHECK_EQUAL(pars.weight, 0.3);
     BOOST_CHECK_EQUAL(pars.nlocipertrait[0], 5u);
@@ -81,6 +82,7 @@ BOOST_AUTO_TEST_CASE(readParameters)
     BOOST_CHECK_EQUAL(pars.sampling, 2u);
     BOOST_CHECK_EQUAL(pars.ratio, 0.25);
     BOOST_CHECK_EQUAL(pars.seed, 12345u);
+    BOOST_CHECK(!pars.import);
     BOOST_CHECK(pars.loadarch);
     BOOST_CHECK(!pars.savearch);
     BOOST_CHECK(pars.savepars);
@@ -149,18 +151,18 @@ BOOST_AUTO_TEST_CASE(readInvalidPopSize)
 }
 
 // Test error upon invalid initial allele frequency
-BOOST_AUTO_TEST_CASE(readInvalidAllFreq)
+BOOST_AUTO_TEST_CASE(readInvalidMutation)
 {
 
     // Write a file with invalid initial allele frequency
-    tst::write("p1.txt", "allfreq -0.5\n");
-    tst::write("p2.txt", "allfreq 0.5 0.5\n");
-    tst::write("p3.txt", "allfreq 1.5\n");
+    tst::write("p1.txt", "mutation -0.5\n");
+    tst::write("p2.txt", "mutation 0.5 0.5\n");
+    tst::write("p3.txt", "mutation 1.5\n");
 
     // Check
-    tst::checkError([&]() { Parameters pars("p1.txt"); }, "Parameter allfreq must be between 0 and 1 in line 1 of file p1.txt");
-    tst::checkError([&]() { Parameters pars("p2.txt"); }, "Too many values for parameter allfreq in line 1 of file p2.txt");
-    tst::checkError([&]() { Parameters pars("p3.txt"); }, "Parameter allfreq must be between 0 and 1 in line 1 of file p3.txt");
+    tst::checkError([&]() { Parameters pars("p1.txt"); }, "Parameter mutation must be between 0 and 1 in line 1 of file p1.txt");
+    tst::checkError([&]() { Parameters pars("p2.txt"); }, "Too many values for parameter mutation in line 1 of file p2.txt");
+    tst::checkError([&]() { Parameters pars("p3.txt"); }, "Parameter mutation must be between 0 and 1 in line 1 of file p3.txt");
 
     // Remove files
     std::remove("p1.txt");
@@ -378,6 +380,24 @@ BOOST_AUTO_TEST_CASE(readInvalidSeed)
     // Check
     tst::checkError([&]() { Parameters pars("p1.txt"); }, "Invalid value type for parameter seed in line 1 of file p1.txt");
     tst::checkError([&]() { Parameters pars("p2.txt"); }, "Too many values for parameter seed in line 1 of file p2.txt");
+
+    // Remove files
+    std::remove("p1.txt");
+    std::remove("p2.txt");
+
+}
+
+// Test error upon invalid import flag
+BOOST_AUTO_TEST_CASE(readInvalidImport)
+{
+
+    // Write a file with invalid import flag
+    tst::write("p1.txt", "import -1\n");
+    tst::write("p2.txt", "import 1 1\n");
+
+    // Check
+    tst::checkError([&]() { Parameters pars("p1.txt"); }, "Invalid value type for parameter import in line 1 of file p1.txt");
+    tst::checkError([&]() { Parameters pars("p2.txt"); }, "Too many values for parameter import in line 1 of file p2.txt");
 
     // Remove files
     std::remove("p1.txt");

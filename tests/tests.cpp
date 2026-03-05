@@ -335,7 +335,7 @@ BOOST_AUTO_TEST_CASE(abuseCannotOpenAlleleOutputFile) {
 BOOST_AUTO_TEST_CASE(useCaseWithGivenSampling) {
 
     // Write a parameter file with given sampling
-    tst::write("parameters.txt", "allfreq 0.2");
+    tst::write("parameters.txt", "mutation 0.2");
 
     // Check that the program runs
     BOOST_CHECK_NO_THROW(doMain({"program", "parameters.txt"}));
@@ -353,7 +353,7 @@ BOOST_AUTO_TEST_CASE(useCaseWithGivenSampling) {
 BOOST_AUTO_TEST_CASE(useCaseWithBernoulliSampling) {
 
     // Write a parameter file with Bernoulli sampling
-    tst::write("parameters.txt", "allfreq 0.2\nsampling 1");
+    tst::write("parameters.txt", "mutation 0.2\nsampling 1");
 
     // Check that the program runs
     BOOST_CHECK_NO_THROW(doMain({"program", "parameters.txt"}));
@@ -371,7 +371,7 @@ BOOST_AUTO_TEST_CASE(useCaseWithBernoulliSampling) {
 BOOST_AUTO_TEST_CASE(useCaseWithBinomialSampling) {
 
     // Write a parameter file with binomial sampling
-    tst::write("parameters.txt", "allfreq 0.2\nsampling 2");
+    tst::write("parameters.txt", "mutation 0.2\nsampling 2");
 
     // Check that the program runs
     BOOST_CHECK_NO_THROW(doMain({"program", "parameters.txt"}));
@@ -389,7 +389,7 @@ BOOST_AUTO_TEST_CASE(useCaseWithBinomialSampling) {
 BOOST_AUTO_TEST_CASE(useCaseWithBinomialSamplingHighMutationRate) {
 
     // Write a parameter file with binomial sampling and high mutation rate
-    tst::write("parameters.txt", "allfreq 0.7\nsampling 2");
+    tst::write("parameters.txt", "mutation 0.7\nsampling 2");
 
     // Check that the program runs
     BOOST_CHECK_NO_THROW(doMain({"program", "parameters.txt"}));
@@ -407,7 +407,7 @@ BOOST_AUTO_TEST_CASE(useCaseWithBinomialSamplingHighMutationRate) {
 BOOST_AUTO_TEST_CASE(useCaseWithBinomialSamplingFullShuffle) {
 
     // Write a parameter file with binomial sampling and low ratio to force full shuffle
-    tst::write("parameters.txt", "allfreq 0.2\nsampling 2\nratio 0");
+    tst::write("parameters.txt", "mutation 0.2\nsampling 2\nratio 0");
 
     // Check that the program runs
     BOOST_CHECK_NO_THROW(doMain({"program", "parameters.txt"}));
@@ -425,7 +425,7 @@ BOOST_AUTO_TEST_CASE(useCaseWithBinomialSamplingFullShuffle) {
 BOOST_AUTO_TEST_CASE(useCaseWithGeometricSampling) {
 
     // Write a parameter file with geometric sampling
-    tst::write("parameters.txt", "allfreq 0.2\nsampling 3");
+    tst::write("parameters.txt", "mutation 0.2\nsampling 3");
 
     // Check that the program runs
     BOOST_CHECK_NO_THROW(doMain({"program", "parameters.txt"}));
@@ -443,7 +443,7 @@ BOOST_AUTO_TEST_CASE(useCaseWithGeometricSampling) {
 BOOST_AUTO_TEST_CASE(useCaseWithGeometricSamplingHighMutationRate) {
 
     // Write a parameter file with geometric sampling and very high mutation rate
-    tst::write("parameters.txt", "allfreq 0.99\nsampling 3");
+    tst::write("parameters.txt", "mutation 0.99\nsampling 3");
 
     // Check that the program runs
     BOOST_CHECK_NO_THROW(doMain({"program", "parameters.txt"}));
@@ -461,7 +461,7 @@ BOOST_AUTO_TEST_CASE(useCaseWithGeometricSamplingHighMutationRate) {
 BOOST_AUTO_TEST_CASE(useCaseWithFullSampling) {
 
     // Write a parameter file with full sampling
-    tst::write("parameters.txt", "allfreq 1");
+    tst::write("parameters.txt", "mutation 1");
 
     // Check that the program runs
     BOOST_CHECK_NO_THROW(doMain({"program", "parameters.txt"}));
@@ -583,5 +583,202 @@ BOOST_AUTO_TEST_CASE(abuseSuppliedArchitectureWithDifferentNumberOfTraits) {
     std::remove("architecture.txt");
     std::remove("genotypes.csv");
     std::remove("traits.csv");
+
+}
+
+// Test that import of matrix of alleles from file works
+BOOST_AUTO_TEST_CASE(useCaseWithAlleleImport) {
+
+    // Parameter file
+    tst::write("parameters.txt", "mutation 1");
+
+    // Run the program to save a genotype file
+    doMain({"program", "parameters.txt"});
+
+    // Parameter file
+    tst::write("parameters.txt", "import 1\nmutation 1");
+
+    // Check that the program runs when importing the saved genotype file
+    BOOST_CHECK_NO_THROW(doMain({"program", "parameters.txt"}));
+
+    // Read in the saved genotype file (skip header and identifier column)
+    const std::vector<double> genotypes = tst::readcsv("genotypes.csv", true, true);
+
+    // Check that all values are 0 (fully de-mutated)
+    bool iswrong = false;
+    for (size_t i = 0u; i < genotypes.size(); ++i) {
+        if (genotypes[i] != 0.0) {
+            iswrong = true;
+            break;
+        }
+    }
+    BOOST_CHECK(!iswrong);
+
+    // Cleanup
+    std::remove("parameters.txt");
+    std::remove("paramlog.txt");
+    std::remove("architecture.txt");
+    std::remove("genotypes.csv");
+    std::remove("traits.csv");
+
+}
+
+// Test error when cannot open allele import file
+BOOST_AUTO_TEST_CASE(abuseCannotOpenAlleleImportFile) {
+
+    // Write a parameter file with invalid import file name
+    tst::write("parameters.txt", "import 1");
+
+    // Check error
+    BOOST_CHECK_THROW(doMain({"program", "parameters.txt"}), std::runtime_error);
+
+    // Cleanup
+    std::remove("parameters.txt");
+    std::remove("paramlog.txt");
+    std::remove("architecture.txt");
+
+}
+
+// Test error when reading invalid genotype from import file
+BOOST_AUTO_TEST_CASE(abuseInvalidGenotypeInImportFile) {
+
+    // Write a parameter file with invalid import file name
+    tst::write("parameters.txt", "import 1");
+
+    // Write an invalid genotype file (skip header and identifier column)
+    tst::write("genotypes.csv", "id,locus1\n1,3");
+
+    // Check error
+    BOOST_CHECK_THROW(doMain({"program", "parameters.txt"}), std::runtime_error);
+
+    // Cleanup
+    std::remove("parameters.txt");
+    std::remove("paramlog.txt");
+    std::remove("architecture.txt");
+    std::remove("genotypes.csv");
+
+}
+
+// Test error when reading genotype out of bounds
+BOOST_AUTO_TEST_CASE(abuseGenotypeOutOfBoundsInImportFile) {
+
+    // Write a parameter file with invalid import file name
+    tst::write("parameters.txt", "import 1");
+
+    // Write an invalid genotype file (skip header and identifier column)
+    tst::write("genotypes.csv", "id,locus1\n1,-1");
+
+    // Check error
+    BOOST_CHECK_THROW(doMain({"program", "parameters.txt"}), std::runtime_error);
+
+    // Cleanup
+    std::remove("parameters.txt");
+    std::remove("paramlog.txt");
+    std::remove("architecture.txt");
+    std::remove("genotypes.csv");
+
+}
+
+// Test error when incorrect number of genotypes in import file
+BOOST_AUTO_TEST_CASE(abuseIncorrectNumberOfGenotypesInImportFile) {
+
+    // Write a parameter file with invalid import file name
+    tst::write("parameters.txt", "import 1\npopsize 3\nnlocipertrait 3");
+
+    // Write an invalid genotype file (skip header and identifier column)
+    tst::write("genotypes.csv", "id,locus1,locus2,locus3\n1,0,0,0\n2,0,0,0");
+
+    // Check error
+    BOOST_CHECK_THROW(doMain({"program", "parameters.txt"}), std::runtime_error);
+
+    // Cleanup
+    std::remove("parameters.txt");
+    std::remove("paramlog.txt");
+    std::remove("architecture.txt");
+    std::remove("genotypes.csv");
+
+}
+
+// Test error when too many genotypes are provided in import file
+BOOST_AUTO_TEST_CASE(abuseTooManyGenotypesInImportFile) {
+
+    // Expect 1 genotype entry (popsize=1, nloci=1)
+    tst::write("parameters.txt", "import 1\npopsize 1\nnlocipertrait 1");
+
+    // Provide 2 genotype entries to trigger the in-loop overflow check
+    tst::write("genotypes.csv", "id,locus1\n1,0\n2,0");
+
+    // Check exact error from the in-loop guard in gen::import
+    tst::checkError(
+        [&] { doMain({"program", "parameters.txt"}); },
+        "Incorrect number of genotypes read from file genotypes.csv"
+    );
+
+    // Cleanup
+    std::remove("parameters.txt");
+    std::remove("paramlog.txt");
+    std::remove("architecture.txt");
+    std::remove("genotypes.csv");
+
+}
+
+// Test error when incorrect format in import file
+BOOST_AUTO_TEST_CASE(abuseIncorrectFormatInImportFile) {
+
+    // Write a parameter file with invalid import file name
+    tst::write("parameters.txt", "import 1");
+
+    // Write an invalid genotype file (skip header and identifier column)
+    tst::write("genotypes.csv", "id,locus1\n1,notanumber");
+
+    // Check error
+    BOOST_CHECK_THROW(doMain({"program", "parameters.txt"}), std::runtime_error);
+
+    // Cleanup
+    std::remove("parameters.txt");
+    std::remove("paramlog.txt");
+    std::remove("architecture.txt");
+    std::remove("genotypes.csv");
+
+}
+
+// Test error when a data row is empty in import file
+BOOST_AUTO_TEST_CASE(abuseEmptyRowInImportFile) {
+
+    // Write a parameter file with import enabled
+    tst::write("parameters.txt", "import 1");
+
+    // Write an invalid genotype file with an empty data row
+    // This should fail when trying to read the identifier column.
+    tst::write("genotypes.csv", "id,locus1\n\n");
+
+    // Check error
+    BOOST_CHECK_THROW(doMain({"program", "parameters.txt"}), std::runtime_error);
+
+    // Cleanup
+    std::remove("parameters.txt");
+    std::remove("paramlog.txt");
+    std::remove("architecture.txt");
+    std::remove("genotypes.csv");
+
+}
+
+// Test error when genotype value overflows integer in import file
+BOOST_AUTO_TEST_CASE(abuseOutOfRangeValueInImportFile) {
+
+    // Write a parameter file with import enabled
+    tst::write("parameters.txt", "import 1");
+
+    // Write an invalid genotype file with an integer too large for stoi
+    tst::write("genotypes.csv", "id,locus1\n1,999999999999999999999999999999999");
+
+    // Check error
+    BOOST_CHECK_THROW(doMain({"program", "parameters.txt"}), std::runtime_error);
+
+    // Cleanup
+    std::remove("parameters.txt");
+    std::remove("paramlog.txt");
+    std::remove("architecture.txt");
+    std::remove("genotypes.csv");
 
 }

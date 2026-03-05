@@ -14,7 +14,7 @@ namespace tst
 {
 
     // Functions used in unit tests
-    std::vector<double> readcsv(const std::string&, const bool& = true);
+    std::vector<double> readcsv(const std::string&, const bool& = true, const bool& = false);
     std::vector<double> readbin(const std::string&);
     std::string readtext(const std::string&);
     void write(const std::string&, const std::string&);

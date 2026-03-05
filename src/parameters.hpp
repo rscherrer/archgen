@@ -31,7 +31,7 @@ struct Parameters {
     // Parameters
     size_t nrepl;                           // number of replicates
     size_t popsize;                         // population size
-    double allfreq;                         // initial frequency of allele 1
+    double mutation;                        // mutation rate
     double effect;                          // standard deviation of additive effect sizes of loci on traits
     double weight;                          // standard deviation of interaction weights of edges on traits
     size_t ntraits;                         // number of traits
@@ -44,6 +44,7 @@ struct Parameters {
     size_t sampling;                        // sampling mode for mutations
     double ratio;                           // density of mutations below which to shuffle only partially
     size_t seed;                            // random seed
+    bool import;                            // whether to import the matrix of alleles from file
     bool loadarch;                          // whether to read the genetic architecture from file
     bool savearch;                          // whether to save the genetic architecture to file
     bool savepars;                          // whether to save the parameters to file

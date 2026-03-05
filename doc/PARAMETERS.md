@@ -30,3 +30,5 @@ Note that hereafter, "positive" means ***including zero***, while "strictly posi
 Please note that the program will read `ntraits` values for the following parameters: `nlocipertrait`, `nedgespertrait`, `skews`, `epistasis`, `dominance` and `envnoise`. Therefore, `ntraits` should be supplied before these parameters in the parameter file. Please also make sure that the parameters are internally consistent (e.g. `nlocipertrait` should sum up to `nloci`, and `nedgespertrait` should sum up to `nedges`).
 
 If a genetic architecture is loaded from a file (`loadarch` is `1`; see [here](ARCHITECTURE.md)), make sure that parameters `epistasis`, `dominance` and `envnoise` have the right number of values (`ntraits` as given in the architecture file), otherwise the program will error. Other parameters that take `ntraits` values will either be automatically updated (e.g. `nlocipertrait` and `nedgespertrait`) or ignored if only used to generate a new architecture (e.g. `skews`).
+
+See [this page](PHENOTYPES.md) for details on how the phenotypes are computed given genotype data and features of the genetic architecture.

@@ -1,0 +1,11 @@
+## Genotype-phenotype map
+
+Given a [genetic architecture](ARCHITECTURE.md) and a matrix of genotypes for a population of individuals at several loci, the trait values of each individual are computed as follows. 
+
+For each locus $i$, we calculate an independent contribution to the phenotype of individual $k$ equal to $\eta_i \, \xi_{ik}$, where $\eta_i$ is the additive effect size of locus $i$, as determined in the genetic architecture, and $\xi_{ik}$ is the gene expression level of locus $i$ in individual $k$. In turn, this level of expression is equal to $-1$ if the genotype of individual $k$ at locus $i$ is `0` (two `0`-alleles), $+1$ if genotype is `2` (two `1`-alleles), and $\sigma_\text{D} \, \theta_i$ if the genotype is heterozygous, i.e. `1`. Here, $\sigma_D$ is the dominance scaling parameter for the trait that locus $i$ is affecting, as provided as parameter `dominance` by the user in the general [parameter file](PARAMETERS.md), and $\theta_i$ is the dominance coefficient of locus $i$, as given in the genetic architecture.
+
+Separately, for each pair of interacting loci $i$ and $j$, we calculate a non-independent contribution to the phenotype equal to $\omega_{ij} \, \xi_{ik} \, \xi_{jk}$, where $\omega_{ij}$ is the weight of the interaction between loci $i$ and $j$, as given in the genetic architecture.
+
+The sum of all independent contributions of loci to a given trait is then scaled by $1 - \sigma_\text{I}$, where $\sigma_\text{I}$ is the epistasis scaling parameter given by `epistasis` in the general parameter file. The sum of all non-independent contributions is similarly scaled by $\sigma_\text{I}$, and the two scaled sums are added together to give the genetic value of locus $i$ for individual $k$. To this value, we sample a random deviation from a normal distribution with mean zero and standard deviation $\sigma_\text{E}$, the environmental noise scaling parameter given by `envnoise`, to result in a final value of a given trait in individual $k$.
+
+This procedure is inspired from the [speciome](https://github.com/rscherrer/speciome) project.

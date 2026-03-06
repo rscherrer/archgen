@@ -1,3 +1,6 @@
+# Sub-projects
+r/
+
 # Third party
 vcpkg
 lcov/
@@ -1050,3 +1053,4 @@ dkms.conf
 *.uf2
 # Raspberry Pi Pico disassembler file
 *.dis
+.Rproj.user

@@ -9,6 +9,7 @@
 #include "../src/MAIN.hpp"
 #include "../src/parameters.hpp"
 #include <boost/test/unit_test.hpp>
+#include <cmath>
 
 // Test that the simulation runs
 BOOST_AUTO_TEST_CASE(useCase) {
@@ -780,5 +781,390 @@ BOOST_AUTO_TEST_CASE(abuseOutOfRangeValueInImportFile) {
     std::remove("paramlog.txt");
     std::remove("architecture.txt");
     std::remove("genotypes.csv");
+
+}
+
+// Test the correct calculation of trait values
+BOOST_AUTO_TEST_CASE(useCaseTraitValueCalculation) {
+
+    // Write a parameter file with one trait and known architecture
+    std::ostringstream content;
+    content << "ntraits 1\n";
+    content << "nlocipertrait 3\n";
+    content << "nedgespertrait 0\n";
+    content << "skews 0\n";
+    content << "epistasis 0\n";
+    content << "dominance 0\n";
+    content << "envnoise 0\n";
+    content << "loadarch 1\n";
+    tst::write("parameters.txt", content.str());
+
+    // Prepare a genetic architecture
+    std::ostringstream arch;
+    arch << "nloci 3\n";
+    arch << "nedges 0\n";
+    arch << "ntraits 1\n";
+    arch << "traitids 1 1 1\n";
+    arch << "effects 0.3 0.4 -0.1\n";
+    arch << "dominances 0 0 0\n";
+    tst::write("architecture.txt", arch.str());
+
+    // Effect sizes as numbers
+    const std::vector<double> effects = {0.3, 0.4, -0.1};
+
+    // Run the simulation
+    doMain({"program", "parameters.txt"});
+
+    // Read in the saved genotype and trait files (skip header and identifier column)
+    const std::vector<double> genotypes = tst::readcsv("genotypes.csv", true, true);
+    const std::vector<double> traits = tst::readcsv("traits.csv", true, true);
+
+    // Prepare expected values
+    std::vector<double> expected(traits.size(), 0.0);
+
+    // Genotype counter
+    size_t k = 0u;
+
+    // Flag
+    bool iswrong = false;
+
+    // For each individual...
+    for (size_t i = 0u; i < traits.size(); ++i) {
+
+        // Prepare
+        double value = 0.0;
+
+        // For each locus...
+        for (size_t j = 0u; j < effects.size(); ++j) {
+
+            // Update individual phenotype
+            value += (genotypes[k] - 1.0) * effects[j];
+
+            // Increment genotype counter
+            ++k;
+
+        }
+        
+        // If no match...
+        if (value != traits[i]) {
+
+            // Exit
+            iswrong = true;
+            break;
+
+        }
+    }
+
+    // Make sure everything is fine
+    BOOST_CHECK(!iswrong);
+
+    // Cleanup
+    std::remove("parameters.txt");
+    std::remove("paramlog.txt");
+    std::remove("architecture.txt");
+    std::remove("genotypes.csv");
+    std::remove("traits.csv");
+
+}
+
+// Test the correct calculation of trait values with dominance
+BOOST_AUTO_TEST_CASE(useCaseTraitValueCalculationWithDominance) {
+
+    // Write a parameter file with one trait and known architecture
+    std::ostringstream content;
+    content << "ntraits 1\n";
+    content << "nlocipertrait 3\n";
+    content << "nedgespertrait 0\n";
+    content << "skews 0\n";
+    content << "epistasis 0\n";
+    content << "dominance 1\n";
+    content << "envnoise 0\n";
+    content << "loadarch 1\n";
+    tst::write("parameters.txt", content.str());
+
+    // Prepare a genetic architecture
+    std::ostringstream arch;
+    arch << "nloci 3\n";
+    arch << "nedges 0\n";
+    arch << "ntraits 1\n";
+    arch << "traitids 1 1 1\n";
+    arch << "effects 0.3 0.4 -0.1\n";
+    arch << "dominances 0.5 0.5 0.5\n";
+    tst::write("architecture.txt", arch.str());
+
+    // Effect sizes as numbers
+    const std::vector<double> effects = {0.3, 0.4, -0.1};
+
+    // Dominance coefficients as numbers
+    const std::vector<double> dominances = {0.5, 0.5, 0.5};
+
+    // Run the simulation
+    doMain({"program", "parameters.txt"});
+
+    // Read in the saved genotype and trait files (skip header and identifier column)
+    const std::vector<double> genotypes = tst::readcsv("genotypes.csv", true, true);
+    const std::vector<double> traits = tst::readcsv("traits.csv", true, true);
+
+    // Prepare expected values
+    std::vector<double> expected(traits.size(), 0.0);
+
+    // Genotype counter
+    size_t k = 0u;
+
+    // Flag
+    bool iswrong = false;
+
+    // For each individual...
+    for (size_t i = 0u; i < traits.size(); ++i) {
+
+        // Prepare
+        double trait = 0.0;
+
+        // For each locus...
+        for (size_t j = 0u; j < effects.size(); ++j) {
+
+            // Compute genetic value
+            double value = genotypes[k] - 1.0;
+
+            // Add dominance deviation for heterozygotes
+            if (value == 0.0)  value += dominances[j];
+
+            // Update individual phenotype
+            trait += value * effects[j];
+
+            // Increment genotype counter
+            ++k;
+
+        }
+        
+        // If no match...
+        if (trait != traits[i]) {
+
+            // Exit
+            iswrong = true;
+            break;
+
+        }
+    }
+
+    // Make sure everything is fine
+    BOOST_CHECK(!iswrong);
+
+    // Cleanup
+    std::remove("parameters.txt");
+    std::remove("paramlog.txt");
+    std::remove("architecture.txt");
+    std::remove("genotypes.csv");
+    std::remove("traits.csv");
+
+}
+
+// Test the correct calculation of trait values with epistasis
+BOOST_AUTO_TEST_CASE(useCaseTraitValueCalculationWithEpistasis) {
+
+    // Write a parameter file with one trait and known architecture
+    std::ostringstream content;
+    content << "ntraits 1\n";
+    content << "nlocipertrait 3\n";
+    content << "nedgespertrait 3\n";
+    content << "skews 0\n";
+    content << "epistasis 0.1\n";
+    content << "dominance 0\n";
+    content << "envnoise 0\n";
+    content << "loadarch 1\n";
+    tst::write("parameters.txt", content.str());
+
+    // Prepare a genetic architecture
+    std::ostringstream arch;
+    arch << "nloci 3\n";
+    arch << "nedges 3\n";
+    arch << "ntraits 1\n";
+    arch << "traitids 1 1 1\n";
+    arch << "effects 0.3 0.4 -0.1\n";
+    arch << "dominances 0 0 0\n";
+    arch << "from 1 2 3\n";
+    arch << "to 2 3 1\n";
+    arch << "weights 0.1 0.1 0.1\n";
+    tst::write("architecture.txt", arch.str());
+
+    // Key values as numbers
+    std::vector<double> effects = {0.3, 0.4, -0.1};
+    std::vector<double> weights = {0.1, 0.1, 0.1};
+
+    // Run the simulation
+    doMain({"program", "parameters.txt"});
+
+    // Read in the saved genotype and trait files (skip header and identifier column)
+    const std::vector<double> genotypes = tst::readcsv("genotypes.csv", true, true);
+    const std::vector<double> traits = tst::readcsv("traits.csv", true, true);
+
+    // Prepare expected values
+    std::vector<double> expected(traits.size(), 0.0);
+
+    // Genotype counter
+    size_t k = 0u;
+
+    // Flag
+    bool iswrong = false;
+
+    // For each individual...
+    for (size_t i = 0u; i < traits.size(); ++i) {
+
+        // Prepare
+        double trait = 0.0;
+
+        // For each locus...
+        for (size_t j = 0u; j < effects.size(); ++j) {
+
+            // Compute genetic value
+            trait += (genotypes[k] - 1.0) * effects[j] * 0.9;
+
+            // Increment genotype counter
+            ++k;
+
+        }
+
+        // Epistatic contributions
+        const double edge01 = weights[0u] * (genotypes[i * 3u + 0u] - 1.0) * (genotypes[i * 3u + 1u] - 1.0);
+        const double edge12 = weights[1u] * (genotypes[i * 3u + 1u] - 1.0) * (genotypes[i * 3u + 2u] - 1.0);
+        const double edge20 = weights[2u] * (genotypes[i * 3u + 2u] - 1.0) * (genotypes[i * 3u + 0u] - 1.0);
+
+        // Update individual phenotype
+        trait += (edge01 + edge12 + edge20) * 0.1;
+
+        // If no match...
+        if (fabs(trait - traits[i]) > 1e-6) {
+
+            // Exit
+            iswrong = true;
+            break;
+
+        }
+    }
+
+    // Make sure everything is fine
+    BOOST_CHECK(!iswrong);
+
+    // Cleanup
+    std::remove("parameters.txt");
+    std::remove("paramlog.txt");
+    std::remove("architecture.txt");
+    std::remove("genotypes.csv");
+    std::remove("traits.csv");
+
+}
+
+// Test the correct calculation of trait values with epistasis and dominance
+BOOST_AUTO_TEST_CASE(useCaseTraitValueCalculationWithEpistasisAndDominance) {
+
+    // Write a parameter file with one trait and known architecture
+    std::ostringstream content;
+    content << "ntraits 1\n";
+    content << "nlocipertrait 3\n";
+    content << "nedgespertrait 3\n";
+    content << "skews 0\n";
+    content << "epistasis 0.1\n";
+    content << "dominance 1\n";
+    content << "envnoise 0\n";
+    content << "loadarch 1\n";
+    tst::write("parameters.txt", content.str());
+
+    // Prepare a genetic architecture
+    std::ostringstream arch;
+    arch << "nloci 3\n";
+    arch << "nedges 3\n";
+    arch << "ntraits 1\n";
+    arch << "traitids 1 1 1\n";
+    arch << "effects 0.3 0.4 -0.1\n";
+    arch << "dominances 0.2 0.2 0.2\n";
+    arch << "from 1 2 3\n";
+    arch << "to 2 3 1\n";
+    arch << "weights 0.1 0.1 0.1\n";
+    tst::write("architecture.txt", arch.str());
+
+    // Key values as numbers
+    std::vector<double> effects = {0.3, 0.4, -0.1};
+    std::vector<double> weights = {0.1, 0.1, 0.1};
+    std::vector<double> dominances = {0.2, 0.2, 0.2};
+
+    // Run the simulation
+    doMain({"program", "parameters.txt"});
+
+    // Read in the saved genotype and trait files (skip header and identifier column)
+    const std::vector<double> genotypes = tst::readcsv("genotypes.csv", true, true);
+    const std::vector<double> traits = tst::readcsv("traits.csv", true, true);
+
+    // Prepare expected values
+    std::vector<double> expected(traits.size(), 0.0);
+
+    // Genotype counter
+    size_t k = 0u;
+
+    // Flag
+    bool iswrong = false;
+
+    // For each individual...
+    for (size_t i = 0u; i < traits.size(); ++i) {
+
+        // Prepare
+        double trait = 0.0;
+
+        // For each locus...
+        for (size_t j = 0u; j < effects.size(); ++j) {
+
+            // Prepare genetic value
+            double value = genotypes[k] - 1.0;
+
+            // Add dominance deviation for heterozygotes
+            if (value == 0.0) value += dominances[j];
+            
+            // Update individual phenotype
+            trait += value * effects[j] * 0.9;
+
+            // Increment genotype counter
+            ++k;
+
+        }
+
+        // Gene expression
+        double exp0 = (genotypes[i * 3u + 0u] - 1.0);
+        double exp1 = (genotypes[i * 3u + 1u] - 1.0);
+        double exp2 = (genotypes[i * 3u + 2u] - 1.0);
+
+        // Add dominance to heterozygotes
+        exp0 += (exp0 == 0.0) * dominances[0u];
+        exp1 += (exp1 == 0.0) * dominances[1u];
+        exp2 += (exp2 == 0.0) * dominances[2u];
+
+        // Epistatic contributions
+        const double edge01 = weights[0u] * exp0 * exp1;
+        const double edge12 = weights[1u] * exp1 * exp2;
+        const double edge20 = weights[2u] * exp2 * exp0;
+
+        // Update individual phenotype
+        trait += (edge01 + edge12 + edge20) * 0.1;
+
+        // If no match...
+        if (fabs(trait - traits[i]) > 1e-6) {
+
+            // TOREMOVE
+            std::cout << "Trait value mismatch for individual " << i << ": expected " << trait << ", got " << traits[i] << std::endl;
+
+            // Exit
+            iswrong = true;
+            break;
+
+        }
+    }
+
+    // Make sure everything is fine
+    BOOST_CHECK(!iswrong);
+
+    // Cleanup
+    std::remove("parameters.txt");
+    std::remove("paramlog.txt");
+    std::remove("architecture.txt");
+    std::remove("genotypes.csv");
+    std::remove("traits.csv");
 
 }

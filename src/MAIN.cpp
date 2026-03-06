@@ -306,19 +306,23 @@ std::vector<double> gen::develop(const std::vector<std::bitset<64u> > &alleles, 
         // Which trait is affected?
         const size_t traitid = arch.traitids[locus];
 
-        // Get the two alleles
-        const bool allele1 = alleles[i / n].test(i % n);
-        const bool allele2 = alleles[(i + tloci) / n].test((i + tloci) % n);
+        // Get the two alleles (stored next to each other)
+        const size_t i1 = 2u * i;
+        const size_t i2 = i1 + 1u;
+        const bool allele1 = alleles[i1 / n].test(i1 % n);
+        const bool allele2 = alleles[i2 / n].test(i2 % n);
 
-        // Note: This is assuming that the first half of the alleles are
-        // for the first chromatid and the second half for the second chromatid
-        // (or haplotype in a diploid genome).
+        // Note: This assumes that each diploid locus is encoded as adjacent
+        // alleles in the bit stream.
 
         // Get genotype from alleles
         const size_t genotype = allele1 + allele2;
 
-        // Translate genotype into expression level
-        expressions[i] = genotype * arch.dominances[locus] * pars.dominance[traitid];
+        // Translate genotype into expression level (-1, 0, or +1)
+        expressions[i] = genotype - 1.0;
+
+        // Add dominance deviation for heterozygotes if needed
+        expressions[i] += (genotype == 1u) * arch.dominances[locus] * pars.dominance[traitid];
 
         // Compute additive contribution to the phenotype
         const double value = expressions[i] * arch.effects[locus] * (1.0 - pars.epistasis[traitid]);

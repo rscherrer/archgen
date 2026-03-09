@@ -12,7 +12,7 @@ nedges 4
 ntraits 2
 traitids 1 1 1 2 2
 effects 0.1 0.1 0.1 0.1 0.1
-dominances 0.05 0.05 0.05 0.05 0.05
+domcoeffs 0.05 0.05 0.05 0.05 0.05
 from 1 1 2 4
 to 2 3 3 5
 weights 0.1 0.2 0.3 0.4
@@ -38,7 +38,7 @@ Below is a more detailed description of each parameter of the genetic architectu
 | `ntraits` | Strictly positive integers | 1 | Number of traits in the model | | 
 | `traitids` | Strictly positive integers from `1` to `ntraits` | `nloci` | Trait affected by each locus | |
 | `effects` | Decimals | `nloci` | Additive effect size of each locus | |
-| `dominances` | Decimals | `nloci` | Dominance coefficient of each locus | |
+| `domcoeffs` | Decimals | `nloci` | Dominance coefficient of each locus | |
 | `from` | Strictly positive integers from `1` to `nloci` | `nedges` | Starting locus of each epistatic interaction | See below |
 | `to` | Strictly positive integers from `1` to `nloci` | `nedges` | Ending locus of each epistatic interaction | See below |
 | `weights` | Decimals | `nedges` | Weight of each epistatic interaction | |
@@ -61,7 +61,7 @@ to 2 3 4 5
 
 will trigger an error because locus 2 is connected to locus 4, but locus 2 affects trait 1 while locus 4 affects trait 2. Note that some loci may be left unconnected.
 
-It is important that certain parameters be supplied in the correct order. For example, `nloci` should be given before `traitids`, `effects` and `dominances`, and `nedges` should be given before `from`, `to` and `weights`. Additionally, `nloci` should be given before `from` and `to` so that the program can check that the locus indices are within bounds, and `ntraits` should be given before `traitids` so encoded traits an be checked for validity. If unsure, just stick to the order in which parameters are listed in the example above.
+It is important that certain parameters be supplied in the correct order. For example, `nloci` should be given before `traitids`, `effects` and `domcoeffs`, and `nedges` should be given before `from`, `to` and `weights`. Additionally, `nloci` should be given before `from` and `to` so that the program can check that the locus indices are within bounds, and `ntraits` should be given before `traitids` so encoded traits an be checked for validity. If unsure, just stick to the order in which parameters are listed in the example above.
 
 The edge-specific parameters (`from`, `to`, and `weights`) may be omitted from the architecture file, in which case edges will be considered absent. Make sure in that case so set `nedges` to `0`. Also make sure that if one of the three elements is omitted, all are. Other parameters (hyperparameters and locus-specific parameters) must be supplied. All locus-specific parameter lists must have the same number of values (`nloci`), and all edge-specific parameter lists must have the same number of values (`nedges`).
 
@@ -69,11 +69,34 @@ The edge-specific parameters (`from`, `to`, and `weights`) may be omitted from t
 
 Parameters `epistasis`, `dominance` and `envnoise` (see [here](PARAMETERS.md)), which are used in the translation of genotypes into phenotypes, remain properties of the regular parameter file. Please **make sure that they match the number of traits** in case a new architecture is provided (the program will error otherwise).
 
-### Simulation algorithm
+### Architecture generation
 
-If `loadarch` is `0`, a new architecture will be generated according to the general parameters provided (see [here](PARAMETERS.md)). Here is a description of how the algorithm works.
+If `loadarch` is `0`, a new architecture will be simulated according to the general parameters provided (see [here](PARAMETERS.md)). Here is a description of how the algorithm works.
 
-First, the program generates `nloci` loci and assigns them encoded `traitids` based on the `nlocipertrait` parameters. All loci are given `effects` sampled from a normal distribution with mean zero and standard deviations as given by the general parameters `effect`, as well as `dominances` sampled from normal distribution with mean zero and standard deviation one. Then, `nedgespertrait` are generated for each respective trait to form a gene network for that trait (the networks are independent among traits, i.e. there is no pleiotropy). Edges are generated according to a modified version of the preferential attachment algorithm of Barabasi and Albert (1999), which, starting with a single edge between two vertices, loops through remaining vertices and attaches them randomly to already attached vertices, with probability proportional to the degree of the already attached vertices, elevated to a power determined by the `skews` parameter (one per trait, as there is one gene network per trait). The Barabási-Albert algorithm is known to generate scale-free networks, which are common in biology. The modified version we used here conditions on the mean degree in a gene network being approximately the number of edges divided by the number of loci in that network. Specifically, for each new vertex to add to the growing network, we sample the number of edges to make from a binomial distribution with number of events the number of edges we have left to spare (number of requested edges still not made minus the number of vertices still to add, since we are reserving at least one edge per remaining vertex to ensure that the network is connected and no vertex is left isolated), and probability of success one over the number of vertices left to attach. This latter probability will increase as the network grows, which will help to ensure that the mean degree is approximately as requested. (If the sampled number of connections to make for a given vertex is greater than the number of vertices already connected, that number of connections is capped to the maximum possible number of connections to make.) The `weights` of the edges are sampled from a normal distribution with mean zero and standard deviation as given by the general parameter `weight`.
+#### Encoded traits
+
+First, the program generates `nloci` loci and assigns them encoded `traitids` based on the `nlocipertrait` parameters. The `traitids` are shuffled around so that encoded traits are distributed at random across the genome.
+
+#### Effect sizes
+
+Independent, locus-specific effect sizes `effects` are sampled across loci from a normal distribution with mean zero and with standard deviation either `sdeffects`, if `standard` is `0`, or, if `standard` is `1`, one divided by the square root of the number of loci encoding the same trait as the focal locus. This latter option keeps the range of phenotypic values that can be produced equal regardless of the number of loci encoding a trait (the variance in `effects` is therefore one over the number of loci encoding the trait), which may be useful in some applications.
+
+#### Dominance coefficients
+
+Similarly, dominance coefficients `domcoeffs` are sampled across loci from a normal distribution with mean zero and with standard deviation either `sddomcoeffs`, if `standard` is `0`, or, if `standard` is `1`, one divided by the square root of the number of loci encoding the same trait as the focal locus. The standardization option has the same consequence on the distribution of `domcoeffs` as explained above for effect sizes.
+
+#### Interaction weights
+
+Interaction weights `weights` are sampled across the edges of the gene networks of each trait from a normal distribution with mean zero and standard deviation as given by the general parameter `sdweights`, if `standard` is `0`, or, if `standard` is `1`, one divided by the square root of the number of edges in the trait-specific network to which the edge belongs. The standardization option has the same consequence on the distribution of `weights` as explained above for effect sizes and dominance coefficients, except here the aim is to maintain the range of phenotypic values that can be produced constant with respect to the number of edges, not the number of loci.
+
+#### Network topology
+
+Edges are generated according to a modified version of the Barabási-Albert preferential attachment algorithm (Barabási and Albert, 1999).
+
+Each trait has its own gene network (i.e. there is no pleiotropy).
+Given a requested number `nedgespertrait` of edges to create for a given trait, the algorithm starts with a single edge between two vertices, and subsequently loops through remaining vertices, attaching them randomly to already attached vertices, with probability proportional to the degree of the already attached vertices, elevated to a power determined by the `skew` parameter of that specific trait. 
+
+The Barabási-Albert algorithm is known to generate scale-free networks, which are common in biology. The modified version we used here conditions on the mean degree in a gene network being approximately the number of edges divided by the number of loci in that network. Specifically, for each new vertex to add to the growing network, we sample the number of edges to make from a binomial distribution with number of events the number of edges we have left to spare (number of requested edges still not made minus the number of vertices still to add, since we are reserving at least one edge per remaining vertex to ensure that the network is connected and no vertex is left isolated), and probability of success one over the number of vertices left to attach. This latter probability will increase as the network grows, which will help to ensure that the mean degree is approximately as requested. If the sampled number of connections to make for a given vertex is greater than the number of vertices already connected, that number of connections is capped to the maximum possible number of connections to make.
 
 Note that the program will attempt to generate the requested number of edges, but it may not always be possible to do so (e.g. if `nedgespertrait` is very high). In this case, an error will be triggered (in the classic Barabasi-Albert algorithm a fixed number of connections is made for each new vertex to graft to the network, and that number constrains the total number of edges there can be in the network). The `nedgespertrait` should sum up to `nedges`. Also keep in mind that the maximum number of edges for a given number of vertices `n` is `n * (n - 1) / 2` (full graph). An error will be thrown if the requested number of edges is greater than this for any trait (`n` being the `nlocipertrait` of the respective trait). Also, since the network to be is connected (no loci are isolated) the minimum number of edges for a given number of vertices `n` is `n - 1`. An error will be thrown if the requested number of edges is smaller than this for any trait. 
 

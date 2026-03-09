@@ -37,7 +37,7 @@ struct Architecture {
     // Locus-specific parameters
     std::vector<size_t> traitids;
     std::vector<double> effects;
-    std::vector<double> dominances;
+    std::vector<double> domcoeffs;
 
     // Edge-specific parameters
     std::vector<size_t> from;

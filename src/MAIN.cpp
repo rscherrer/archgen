@@ -12,6 +12,7 @@
 #include <fstream>
 #include <sstream>
 #include <numeric>
+#include <cstdint>
 
 // Function to import matrix of alleles from file
 void gen::import(std::vector<std::bitset<64u> > &alleles, const std::string &filename, const size_t &N) {
@@ -322,7 +323,7 @@ std::vector<double> gen::develop(const std::vector<std::bitset<64u> > &alleles, 
         expressions[i] = genotype - 1.0;
 
         // Add dominance deviation for heterozygotes if needed
-        expressions[i] += (genotype == 1u) * arch.dominances[locus] * pars.dominance[traitid];
+        expressions[i] += (genotype == 1u) * arch.domcoeffs[locus] * pars.dominance[traitid];
 
         // Compute additive contribution to the phenotype
         const double value = expressions[i] * arch.effects[locus] * (1.0 - pars.epistasis[traitid]);
@@ -480,14 +481,14 @@ void stf::saveAlleles(std::vector<std::bitset<64u> > &alleles, const size_t &pop
         for (size_t j = 0u; j < alleles.size(); ++j) {
 
             // Convert it to a binary number
-            const size_t value = alleles[j].to_ulong();
+            const std::uint64_t value = static_cast<std::uint64_t>(alleles[j].to_ullong());
 
             // Note: Each 64-bit bitset will be fully converted to
             // a 64-bit number on a 64-bit system, but will overflow
             // on a 32-bit system.
 
-            // Save that number to the file
-            file << value;
+            // Save that number as raw bytes (8 bytes per chunk)
+            file.write(reinterpret_cast<const char *>(&value), sizeof(value));
 
         }
 

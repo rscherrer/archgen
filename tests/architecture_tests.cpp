@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE(readArchitecture) {
     content << "ntraits 2\n";
     content << "traitids 1 1 2 2 2\n";
     content << "effects 0.1 0.2 0.3 0.4 0.5\n";
-    content << "dominances 0.01 0.02 0.03 0.04 0.05\n";
+    content << "domcoeffs 0.01 0.02 0.03 0.04 0.05\n";
     content << "from 1 3\n";
     content << "to 2 4\n";
     content << "weights 0.5 0.6\n";
@@ -54,11 +54,11 @@ BOOST_AUTO_TEST_CASE(readArchitecture) {
     BOOST_CHECK_CLOSE(arch.effects[2], 0.3, 1e-6);
     BOOST_CHECK_CLOSE(arch.effects[3], 0.4, 1e-6);
     BOOST_CHECK_CLOSE(arch.effects[4], 0.5, 1e-6);
-    BOOST_CHECK_CLOSE(arch.dominances[0], 0.01, 1e-6);
-    BOOST_CHECK_CLOSE(arch.dominances[1], 0.02, 1e-6);
-    BOOST_CHECK_CLOSE(arch.dominances[2], 0.03, 1e-6);
-    BOOST_CHECK_CLOSE(arch.dominances[3], 0.04, 1e-6);
-    BOOST_CHECK_CLOSE(arch.dominances[4], 0.05, 1e-6);
+    BOOST_CHECK_CLOSE(arch.domcoeffs[0], 0.01, 1e-6);
+    BOOST_CHECK_CLOSE(arch.domcoeffs[1], 0.02, 1e-6);
+    BOOST_CHECK_CLOSE(arch.domcoeffs[2], 0.03, 1e-6);
+    BOOST_CHECK_CLOSE(arch.domcoeffs[3], 0.04, 1e-6);
+    BOOST_CHECK_CLOSE(arch.domcoeffs[4], 0.05, 1e-6);
     BOOST_CHECK_EQUAL(arch.from[0], 0u);
     BOOST_CHECK_EQUAL(arch.from[1], 2u);
     BOOST_CHECK_EQUAL(arch.to[0], 1u);
@@ -173,13 +173,13 @@ BOOST_AUTO_TEST_CASE(readInvalidEffects) {
 }
 
 // Test that error when invalid dominance coefficients
-BOOST_AUTO_TEST_CASE(readInvalidDominances) {
+BOOST_AUTO_TEST_CASE(readInvalidDomCoeffs) {
 
     // Write a file with invalid dominance coefficients
-    tst::write("a1.txt", "nloci 5\ndominances 0.01 0.02 0.03 0.04 0.05 0.06\n");
+    tst::write("a1.txt", "nloci 5\ndomcoeffs 0.01 0.02 0.03 0.04 0.05 0.06\n");
 
     // Check
-    tst::checkError([&]() { Architecture arch("a1.txt"); }, "Too many values for parameter dominances in line 2 of file a1.txt");
+    tst::checkError([&]() { Architecture arch("a1.txt"); }, "Too many values for parameter domcoeffs in line 2 of file a1.txt");
 
     // Remove file
     std::remove("a1.txt");
@@ -245,7 +245,7 @@ BOOST_AUTO_TEST_CASE(readTooManyTraitsGivenLoci)
     content << "ntraits 6\n";
     content << "traitids 1 1 2 2 2\n";
     content << "effects 0.1 0.2 0.3 0.4 0.5\n";
-    content << "dominances 0.01 0.02 0.03 0.04 0.05\n";
+    content << "domcoeffs 0.01 0.02 0.03 0.04 0.05\n";
     content << "from 1 3\n";
     content << "to 2 4\n";
     content << "weights 0.5 0.6\n";
@@ -270,7 +270,7 @@ BOOST_AUTO_TEST_CASE(readEncodedTraitOutOfBounds)
     content << "ntraits 2\n";
     content << "traitids 1 1 2 2 3\n";
     content << "effects 0.1 0.2 0.3 0.4 0.5\n";
-    content << "dominances 0.01 0.02 0.03 0.04 0.05\n";
+    content << "domcoeffs 0.01 0.02 0.03 0.04 0.05\n";
     content << "from 1 3\n";
     content << "to 2 4\n";
     content << "weights 0.5 0.6\n";
@@ -295,7 +295,7 @@ BOOST_AUTO_TEST_CASE(readStartLocusOutOfBounds)
     content << "ntraits 2\n";
     content << "traitids 1 1 2 2 2\n";
     content << "effects 0.1 0.2 0.3 0.4 0.5\n";
-    content << "dominances 0.01 0.02 0.03 0.04 0.05\n";
+    content << "domcoeffs 0.01 0.02 0.03 0.04 0.05\n";
     content << "from 6 3\n";
     content << "to 2 4\n";
     content << "weights 0.5 0.6\n";
@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE(readEndLocusOutOfBounds)
     content << "ntraits 2\n";
     content << "traitids 1 1 2 2 2\n";
     content << "effects 0.1 0.2 0.3 0.4 0.5\n";
-    content << "dominances 0.01 0.02 0.03 0.04 0.05\n";
+    content << "domcoeffs 0.01 0.02 0.03 0.04 0.05\n";
     content << "from 1 3\n";
     content << "to 2 6\n";
     content << "weights 0.5 0.6\n";
@@ -345,7 +345,7 @@ BOOST_AUTO_TEST_CASE(readSameStartEndLocus)
     content << "ntraits 2\n";
     content << "traitids 1 1 2 2 2\n";
     content << "effects 0.1 0.2 0.3 0.4 0.5\n";
-    content << "dominances 0.01 0.02 0.03 0.04 0.05\n";
+    content << "domcoeffs 0.01 0.02 0.03 0.04 0.05\n";
     content << "from 1 3\n";
     content << "to 1 4\n";
     content << "weights 0.5 0.6\n";
@@ -370,7 +370,7 @@ BOOST_AUTO_TEST_CASE(readDifferentTraitLoci)
     content << "ntraits 2\n";
     content << "traitids 1 1 2 2 2\n";
     content << "effects 0.1 0.2 0.3 0.4 0.5\n";
-    content << "dominances 0.01 0.02 0.03 0.04 0.05\n";
+    content << "domcoeffs 0.01 0.02 0.03 0.04 0.05\n";
     content << "from 1 1\n";
     content << "to 2 4\n";
     content << "weights 0.5 0.6\n";
@@ -396,7 +396,7 @@ BOOST_AUTO_TEST_CASE(saveArchitecture) {
     arch.ntraits = 2u;
     arch.traitids = {0u, 0u, 1u, 1u, 1u};
     arch.effects = {0.1, 0.2, 0.3, 0.4, 0.5};
-    arch.dominances = {0.01, 0.02, 0.03, 0.04, 0.05};
+    arch.domcoeffs = {0.01, 0.02, 0.03, 0.04, 0.05};
     arch.from = {0u, 2u};
     arch.to = {1u, 3u};
     arch.weights = {0.5, 0.6};
@@ -421,11 +421,11 @@ BOOST_AUTO_TEST_CASE(saveArchitecture) {
     BOOST_CHECK_CLOSE(arch2.effects[2], 0.3, 1e-6);
     BOOST_CHECK_CLOSE(arch2.effects[3], 0.4, 1e-6);
     BOOST_CHECK_CLOSE(arch2.effects[4], 0.5, 1e-6);
-    BOOST_CHECK_CLOSE(arch2.dominances[0], 0.01, 1e-6);
-    BOOST_CHECK_CLOSE(arch2.dominances[1], 0.02, 1e-6);
-    BOOST_CHECK_CLOSE(arch2.dominances[2], 0.03, 1e-6);
-    BOOST_CHECK_CLOSE(arch2.dominances[3], 0.04, 1e-6);
-    BOOST_CHECK_CLOSE(arch2.dominances[4], 0.05, 1e-6);
+    BOOST_CHECK_CLOSE(arch2.domcoeffs[0], 0.01, 1e-6);
+    BOOST_CHECK_CLOSE(arch2.domcoeffs[1], 0.02, 1e-6);
+    BOOST_CHECK_CLOSE(arch2.domcoeffs[2], 0.03, 1e-6);
+    BOOST_CHECK_CLOSE(arch2.domcoeffs[3], 0.04, 1e-6);
+    BOOST_CHECK_CLOSE(arch2.domcoeffs[4], 0.05, 1e-6);
     BOOST_CHECK_EQUAL(arch2.from[0], 0u);
     BOOST_CHECK_EQUAL(arch2.from[1], 2u);
     BOOST_CHECK_EQUAL(arch2.to[0], 1u);
@@ -457,7 +457,7 @@ BOOST_AUTO_TEST_CASE(generateArchitecture) {
     pars.ntraits = 3u;
     pars.nlocipertrait = {100u, 100u, 99u};
     pars.nedgespertrait = {100u, 100u, 100u};
-    pars.skews = {0.5, 1.0, 1.5};
+    pars.skew = {0.5, 1.0, 1.5};
 
     // Update internal parameters
     pars.update();
@@ -478,7 +478,7 @@ BOOST_AUTO_TEST_CASE(generateArchitecture) {
     BOOST_CHECK_EQUAL(arch.nedgespertrait[2], 100u);
     BOOST_CHECK_EQUAL(arch.traitids.size(), 299u);
     BOOST_CHECK_EQUAL(arch.effects.size(), 299u);
-    BOOST_CHECK_EQUAL(arch.dominances.size(), 299u);
+    BOOST_CHECK_EQUAL(arch.domcoeffs.size(), 299u);
     BOOST_CHECK_EQUAL(arch.from.size(), 300u);
     BOOST_CHECK_EQUAL(arch.to.size(), 300u);
     BOOST_CHECK_EQUAL(arch.weights.size(), 300u);
@@ -495,7 +495,7 @@ BOOST_AUTO_TEST_CASE(errorWhenGeneratingArchitecture) {
     pars.ntraits = 1u;
     pars.nlocipertrait = {100u};
     pars.nedgespertrait = {4950u};
-    pars.skews = {1.0};
+    pars.skew = {1.0};
 
     // Update internal parameters
     pars.update();
@@ -514,7 +514,7 @@ BOOST_AUTO_TEST_CASE(errorWhenTestingArchitecture) {
     pars.ntraits = 1u;
     pars.nlocipertrait = {100u};
     pars.nedgespertrait = {100u};
-    pars.skews = {1.0};
+    pars.skew = {1.0};
 
     // Create architecture with different number of edges
     Architecture arch;
@@ -526,7 +526,7 @@ BOOST_AUTO_TEST_CASE(errorWhenTestingArchitecture) {
     arch.traitids = std::vector<size_t>(100u, 0u);
     arch.traitids[0u] = 1u;
     arch.effects = std::vector<double>(100u, 0.1);
-    arch.dominances = std::vector<double>(100u, 0.01);
+    arch.domcoeffs = std::vector<double>(100u, 0.01);
     arch.from = std::vector<size_t>(50u, 0u);
     arch.to = std::vector<size_t>(50u, 1u);
     arch.weights = std::vector<double>(50u, 0.5);

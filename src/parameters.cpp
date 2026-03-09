@@ -21,12 +21,13 @@ Parameters::Parameters(const std::string& filename) :
     nrepl(1u),
     popsize(10u),
     mutation(0.0),
-    effect(0.0),
-    weight(0.0),
+    sdeffects(0.0),
+    sddomcoeffs(0.0),
+    sdweights(0.0),
     ntraits(1u),
     nlocipertrait(ntraits, 10u),
     nedgespertrait(ntraits, 0u),
-    skews(ntraits, 1.0),
+    skew(ntraits, 1.0),
     epistasis(ntraits, 0.0),
     dominance(ntraits, 0.0),
     envnoise(ntraits, 0.0),
@@ -34,6 +35,7 @@ Parameters::Parameters(const std::string& filename) :
     ratio(0.25),
     seed(clockseed()),
     import(false),
+    standard(false),
     loadarch(false),
     savearch(true),
     savepars(true),
@@ -103,12 +105,13 @@ void Parameters::read(const std::string &filename) {
         if (name == "nrepl") reader.readvalue<size_t>(nrepl, chk::strictpos<size_t>);
         else if (name == "popsize") reader.readvalue<size_t>(popsize, chk::strictpos<size_t>);
         else if (name == "mutation") reader.readvalue<double>(mutation, chk::proportion<double>);
-        else if (name == "effect") reader.readvalue<double>(effect, chk::positive<double>);
-        else if (name == "weight") reader.readvalue<double>(weight, chk::positive<double>);
+        else if (name == "sdeffects") reader.readvalue<double>(sdeffects, chk::positive<double>);
+        else if (name == "sddomcoeffs") reader.readvalue<double>(sddomcoeffs, chk::positive<double>);
+        else if (name == "sdweights") reader.readvalue<double>(sdweights, chk::positive<double>);
         else if (name == "ntraits") reader. readvalue<size_t>(ntraits, chk::strictpos<size_t>);
         else if (name == "nlocipertrait") reader.readvalues<size_t>(nlocipertrait, ntraits, chk::strictpos<size_t>);
         else if (name == "nedgespertrait") reader.readvalues<size_t>(nedgespertrait, ntraits);
-        else if (name == "skews") reader.readvalues<double>(skews, ntraits);
+        else if (name == "skew") reader.readvalues<double>(skew, ntraits);
         else if (name == "epistasis") reader.readvalues<double>(epistasis, ntraits, chk::proportion<double>);
         else if (name == "dominance") reader.readvalues<double>(dominance, ntraits, chk::positive<double>);
         else if (name == "envnoise") reader.readvalues<double>(envnoise, ntraits, chk::positive<double>);
@@ -116,6 +119,7 @@ void Parameters::read(const std::string &filename) {
         else if (name == "ratio") reader.readvalue<double>(ratio, chk::proportion<double>);
         else if (name == "seed") reader.readvalue<size_t>(seed);
         else if (name == "import") reader.readvalue<bool>(import);
+        else if (name == "standard") reader.readvalue<bool>(standard);
         else if (name == "loadarch") reader.readvalue<bool>(loadarch);
         else if (name == "savearch") reader.readvalue<bool>(savearch);
         else if (name == "savepars") reader.readvalue<bool>(savepars);
@@ -212,11 +216,12 @@ void Parameters::check() const {
     assert(ntraits > 0u);
     assert(ntraits <= nloci);
     assert(mutation >= 0.0 && mutation <= 1.0);
-    assert(effect >= 0.0);
-    assert(weight >= 0.0);
+    assert(sdeffects >= 0.0);
+    assert(sddomcoeffs >= 0.0);
+    assert(sdweights >= 0.0);
     assert(nlocipertrait.size() == ntraits);
     assert(nedgespertrait.size() == ntraits);
-    assert(skews.size() == ntraits);
+    assert(skew.size() == ntraits);
     assert(epistasis.size() == ntraits);
     assert(dominance.size() == ntraits);
     assert(envnoise.size() == ntraits);
@@ -254,7 +259,9 @@ void Parameters::save(const std::string &filename) const {
     file << "nrepl " << nrepl << '\n';
     file << "popsize " << popsize << '\n';    
     file << "mutation " << mutation << '\n';
-    file << "effect " << effect << '\n';
+    file << "sdeffects " << sdeffects << '\n';
+    file << "sddomcoeffs " << sddomcoeffs << '\n';
+    file << "sdweights " << sdweights << '\n';
     file << "ntraits " << ntraits << '\n';
     file << "nlocipertrait";
     for (size_t i : nlocipertrait) file << ' ' << i;
@@ -262,8 +269,8 @@ void Parameters::save(const std::string &filename) const {
     file << "nedgespertrait";
     for (size_t i : nedgespertrait) file << ' ' << i;
     file << '\n';
-    file << "skews";
-    for (double x : skews) file << ' ' << x;
+    file << "skew";
+    for (double x : skew) file << ' ' << x;
     file << '\n';
     file << "epistasis";
     for (double x : epistasis) file << ' ' << x;
@@ -278,6 +285,7 @@ void Parameters::save(const std::string &filename) const {
     file << "ratio " << ratio << '\n';
     file << "seed " << seed << '\n';
     file << "import " << import << '\n';
+    file << "standard " << standard << '\n';
     file << "loadarch " << loadarch << '\n';
     file << "savearch " << savearch << '\n';
     file << "savepars " << savepars << '\n';

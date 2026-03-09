@@ -65,7 +65,7 @@ std::vector<double> tst::readcsv(const std::string &filename, const bool &head, 
 }
 
 // Function to read a binary data file
-std::vector<double> tst::readbin(const std::string &filename) {
+std::vector<std::uint64_t> tst::readbin(const std::string &filename) {
 
     // filename: the name of the file to read
 
@@ -77,26 +77,16 @@ std::vector<double> tst::readbin(const std::string &filename) {
         throw std::runtime_error("Unable to open file " + filename);
 
     // Prepare storage for values
-    double x;
-    std::vector<double> v;
+    std::uint64_t x = 0u;
+    std::vector<std::uint64_t> v;
 
-    // If the file is open
-    if (file.is_open()) {
+    // Read each full 64-bit chunk
+    while (file.read(reinterpret_cast<char *>(&x), sizeof(x)))
+        v.push_back(x);
 
-        // Loop through the file until we reach the end of the file
-        while (file) {
-
-            // Read elements
-            file.read((char *) &x, sizeof(double));
-
-            // Exit if reaching the end of the file
-            if (!file.gcount()) break;
-
-            // Store elements
-            v.push_back(x);
-
-        }
-    }
+    // Catch malformed trailing bytes (file size not multiple of 8)
+    if (file.gcount() != 0)
+        throw std::runtime_error("Invalid binary format in file " + filename);
 
     // Close the file
     file.close();

@@ -13,7 +13,7 @@ Architecture::Architecture(const std::string& archfile) :
     ntraits(1u),
     traitids(nloci, 0u),
     effects(nloci, 0.0),
-    dominances(nloci, 0.0),
+    domcoeffs(nloci, 0.0),
     from(nedges, 0u),
     to(nedges, 0u),
     weights(nedges, 0.0),
@@ -70,7 +70,7 @@ void Architecture::read(const std::string& filename) {
         else if (name == "ntraits") reader.readvalue<size_t>(ntraits, chk::strictpos<size_t>);
         else if (name == "traitids") reader.readvalues<size_t>(traitids, nloci, chk::strictpos<size_t>);
         else if (name == "effects") reader.readvalues<double>(effects, nloci);
-        else if (name == "dominances") reader.readvalues<double>(dominances, nloci);
+        else if (name == "domcoeffs") reader.readvalues<double>(domcoeffs, nloci);
         else if (name == "from") reader.readvalues<size_t>(from, nedges, chk::strictpos<size_t>);
         else if (name == "to") reader.readvalues<size_t>(to, nedges, chk::strictpos<size_t>);
         else if (name == "weights") reader.readvalues<double>(weights, nedges);
@@ -98,7 +98,7 @@ void Architecture::read(const std::string& filename) {
     // Check that all vectors have the right size
     if (traitids.size() != nloci) throw std::runtime_error("Number of encoded traits does not match number of loci in file " + filename);
     if (effects.size() != nloci) throw std::runtime_error("Number of effects does not match number of loci in file " + filename);
-    if (dominances.size() != nloci) throw std::runtime_error("Number of dominance effects does not match number of loci in file " + filename);
+    if (domcoeffs.size() != nloci) throw std::runtime_error("Number of dominance effects does not match number of loci in file " + filename);
     if (from.size() != nedges) throw std::runtime_error("Number of start loci does not match number of edges in file " + filename);
     if (to.size() != nedges) throw std::runtime_error("Number of end loci does not match number of edges in file " + filename);
     if (weights.size() != nedges) throw std::runtime_error("Number of interaction weights does not match number of edges in file " + filename);
@@ -192,7 +192,7 @@ void Architecture::generate(const Parameters &pars) {
     // Reset
     traitids.resize(0u);
     effects.resize(0u);
-    dominances.resize(0u);
+    domcoeffs.resize(0u);
     from.resize(0u);
     to.resize(0u);
     weights.resize(0u);
@@ -200,13 +200,29 @@ void Architecture::generate(const Parameters &pars) {
     // Reserve memory
     traitids.reserve(nloci);
     effects.reserve(nloci);
-    dominances.reserve(nloci);
+    domcoeffs.reserve(nloci);
     from.reserve(nedges);
     to.reserve(nedges);
     weights.reserve(nedges);
 
     // Prepare a distribution to sample from
     rnd::normal getnormal(0.0, 1.0);
+
+    // Prepare square-rooted numbers of loci and edges per trait
+    std::vector<double> snl(ntraits, 0.0);
+    std::vector<double> sne(ntraits, 0.0);
+
+    // For each trait...
+    for (size_t j = 0u; j < ntraits; ++j) {
+
+        // Square root the number of loci and edges per trait
+        snl[j] = sqrt(nlocipertrait[j]);
+        sne[j] = sqrt(nedgespertrait[j]);
+
+        // Check
+        assert(snl[j] > 0.0);
+
+    }
 
     // Counter
     size_t trait = 0u;
@@ -232,13 +248,10 @@ void Architecture::generate(const Parameters &pars) {
         traitids.push_back(trait);
 
         // Additive effect size of the locus on the trait
-        effects.push_back(getnormal(rnd::rng) * pars.effect);
+        effects.push_back(getnormal(rnd::rng) * (pars.standard ? 1.0 / snl[trait] : pars.sdeffects));
 
         // Dominance effect of the locus on the trait
-        dominances.push_back(getnormal(rnd::rng));
-
-        // Note: The dominance scaling parameter can be used to modify the
-        // magnitued of dominance deviations for each trait separately.
+        domcoeffs.push_back(getnormal(rnd::rng) * (pars.standard ? 1.0 / snl[trait] : pars.sddomcoeffs));
 
     }
 
@@ -248,15 +261,20 @@ void Architecture::generate(const Parameters &pars) {
     // Prepare to store indices of the loci affecting each trait
     std::vector<std::vector<size_t> > indices(ntraits);
 
-    // Note: These will be useful later.
-    
-    // Reserve memory
-    for (size_t j = 0u; j < ntraits; ++j) 
+    // For each trait...
+    for (size_t j = 0u; j < ntraits; ++j) {
+
+        // Reserve memory for indices
         indices[j].reserve(nlocipertrait[j]);
 
-    // Collect indices for each trait
+    }
+
+    // For each locus...
     for (size_t i = 0u; i < nloci; ++i) {
+
+        // Collect indices for corresponding trait
         indices[traitids[i]].push_back(i);
+
     }
 
     // Note: What follows implements a modified version of the Barabasi-Albert 
@@ -271,7 +289,7 @@ void Architecture::generate(const Parameters &pars) {
         // Useful numbers
         const size_t nL = nlocipertrait[j];
         const size_t nE = nedgespertrait[j];
-        const double skew = pars.skews[j];
+        const double skew = pars.skew[j];
 
         // Skip if no edges affect the trait
         if (nE == 0u) continue;
@@ -280,6 +298,7 @@ void Architecture::generate(const Parameters &pars) {
         assert(nL > 1u);
         assert(nE >= nL - 1u);
         assert(nE <= nL * (nL - 1u) / 2u);
+        assert(sne[j] > 0.0);
 
         // First connection
         from.push_back(indices[j][0u]);
@@ -287,8 +306,8 @@ void Architecture::generate(const Parameters &pars) {
 
         // Note: This connects vertex 0 to vertex 1.
 
-        // Sample first interaction weight
-        weights.push_back(getnormal(rnd::rng) * pars.weight);
+        // Sample the first interaction weight
+        weights.push_back(getnormal(rnd::rng) * (pars.standard ? 1.0 / sne[j] : pars.sdweights));
 
         // Initialize vector of degrees across vertices
         std::vector<size_t> degrees(nL, 0u);
@@ -379,7 +398,7 @@ void Architecture::generate(const Parameters &pars) {
                 // special case when skewness is one.
 
                 // Sample an interaction weight
-                weights.push_back(getnormal(rnd::rng) * pars.weight);
+                weights.push_back(getnormal(rnd::rng) * (pars.standard ? 1.0 / sne[j]: pars.sdweights));
 
                 // Decrement the number of connections left to make
                 --n;
@@ -448,7 +467,7 @@ void Architecture::check() const {
     // Check sizes
     assert(traitids.size() == nloci);
     assert(effects.size() == nloci);
-    assert(dominances.size() == nloci);
+    assert(domcoeffs.size() == nloci);
     assert(from.size() == nedges);
     assert(to.size() == nedges);
     assert(weights.size() == nedges);
@@ -517,8 +536,8 @@ void Architecture::save(const std::string &filename) const {
     file << "effects";
     for (double x : effects) file << ' ' << x;
     file << '\n';
-    file << "dominances";
-    for (double x : dominances) file << ' ' << x;
+    file << "domcoeffs";
+    for (double x : domcoeffs) file << ' ' << x;
     file << '\n';
 
     // If edges...

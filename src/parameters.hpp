@@ -32,12 +32,13 @@ struct Parameters {
     size_t nrepl;                           // number of replicates
     size_t popsize;                         // population size
     double mutation;                        // mutation rate
-    double effect;                          // standard deviation of additive effect sizes of loci on traits
-    double weight;                          // standard deviation of interaction weights of edges on traits
+    double sdeffects;                       // standard deviation of additive effect sizes of loci
+    double sddomcoeffs;                     // standard deviation of dominance coefficients of loci
+    double sdweights;                       // standard deviation of interaction weights of edges
     size_t ntraits;                         // number of traits
     std::vector<size_t> nlocipertrait;      // number of loci affecting each trait
     std::vector<size_t> nedgespertrait;     // number of edges affecting each trait
-    std::vector<double> skews;              // skewness of the degree distributions of each trait network
+    std::vector<double> skew;               // skewness of the degree distributions of each trait network
     std::vector<double> epistasis;          // scaling parameters for the importance of interactions in trait development
     std::vector<double> dominance;          // scaling parameters for the importance of dominance effects in trait development
     std::vector<double> envnoise;           // scaling parameters for the importance of environmental effects in trait development
@@ -45,6 +46,7 @@ struct Parameters {
     double ratio;                           // density of mutations below which to shuffle only partially
     size_t seed;                            // random seed
     bool import;                            // whether to import the matrix of alleles from file
+    bool standard;                          // whether to standardize generated architecture parameters
     bool loadarch;                          // whether to read the genetic architecture from file
     bool savearch;                          // whether to save the genetic architecture to file
     bool savepars;                          // whether to save the parameters to file

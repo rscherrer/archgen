@@ -30,11 +30,12 @@ BOOST_AUTO_TEST_CASE(readParameters)
     content << "popsize 10\n";
     content << "ntraits 3\n";
     content << "mutation 0.1\n";
-    content << "effect 0.5\n";
-    content << "weight 0.3\n";
+    content << "sdeffects 0.5\n";
+    content << "sddomcoeffs 1\n";
+    content << "sdweights 0.3\n";
     content << "nlocipertrait 5 10 15\n";
     content << "nedgespertrait 0 0 0\n";
-    content << "skews 0.5 1.0 1.5\n";
+    content << "skew 0.5 1.0 1.5\n";
     content << "epistasis 0.1 0.2 0.3\n";
     content << "dominance 0.4 0.5 0.6\n";
     content << "envnoise 0.7 0.8 0.9\n";
@@ -42,6 +43,7 @@ BOOST_AUTO_TEST_CASE(readParameters)
     content << "ratio 0.25\n";
     content << "seed 12345\n";
     content << "import 0\n";
+    content << "standard 0\n";
     content << "loadarch 1\n";
     content << "savearch 0\n";
     content << "savepars 1\n";
@@ -59,17 +61,18 @@ BOOST_AUTO_TEST_CASE(readParameters)
     BOOST_CHECK_EQUAL(pars.popsize, 10u);
     BOOST_CHECK_EQUAL(pars.ntraits, 3u);
     BOOST_CHECK_EQUAL(pars.mutation, 0.1);
-    BOOST_CHECK_EQUAL(pars.effect, 0.5);
-    BOOST_CHECK_EQUAL(pars.weight, 0.3);
+    BOOST_CHECK_EQUAL(pars.sdeffects, 0.5);
+    BOOST_CHECK_EQUAL(pars.sddomcoeffs, 1.0);
+    BOOST_CHECK_EQUAL(pars.sdweights, 0.3);
     BOOST_CHECK_EQUAL(pars.nlocipertrait[0], 5u);
     BOOST_CHECK_EQUAL(pars.nlocipertrait[1], 10u);
     BOOST_CHECK_EQUAL(pars.nlocipertrait[2], 15u);
     BOOST_CHECK_EQUAL(pars.nedgespertrait[0], 0u);
     BOOST_CHECK_EQUAL(pars.nedgespertrait[1], 0u);
     BOOST_CHECK_EQUAL(pars.nedgespertrait[2], 0u);
-    BOOST_CHECK_EQUAL(pars.skews[0], 0.5);
-    BOOST_CHECK_EQUAL(pars.skews[1], 1.0);
-    BOOST_CHECK_EQUAL(pars.skews[2], 1.5);
+    BOOST_CHECK_EQUAL(pars.skew[0], 0.5);
+    BOOST_CHECK_EQUAL(pars.skew[1], 1.0);
+    BOOST_CHECK_EQUAL(pars.skew[2], 1.5);
     BOOST_CHECK_EQUAL(pars.epistasis[0], 0.1);
     BOOST_CHECK_EQUAL(pars.epistasis[1], 0.2);
     BOOST_CHECK_EQUAL(pars.epistasis[2], 0.3);
@@ -83,6 +86,7 @@ BOOST_AUTO_TEST_CASE(readParameters)
     BOOST_CHECK_EQUAL(pars.ratio, 0.25);
     BOOST_CHECK_EQUAL(pars.seed, 12345u);
     BOOST_CHECK(!pars.import);
+    BOOST_CHECK(!pars.standard);
     BOOST_CHECK(pars.loadarch);
     BOOST_CHECK(!pars.savearch);
     BOOST_CHECK(pars.savepars);
@@ -176,12 +180,30 @@ BOOST_AUTO_TEST_CASE(readInvalidEffect)
 {
 
     // Write a file with invalid mutational effect standard deviation
-    tst::write("p1.txt", "effect -0.5\n");
-    tst::write("p2.txt", "effect 10 10\n");
+    tst::write("p1.txt", "sdeffects -0.5\n");
+    tst::write("p2.txt", "sdeffects 10 10\n");
 
     // Check
-    tst::checkError([&]() { Parameters pars("p1.txt"); }, "Parameter effect must be positive in line 1 of file p1.txt");
-    tst::checkError([&]() { Parameters pars("p2.txt"); }, "Too many values for parameter effect in line 1 of file p2.txt");
+    tst::checkError([&]() { Parameters pars("p1.txt"); }, "Parameter sdeffects must be positive in line 1 of file p1.txt");
+    tst::checkError([&]() { Parameters pars("p2.txt"); }, "Too many values for parameter sdeffects in line 1 of file p2.txt");
+
+    // Remove files
+    std::remove("p1.txt");
+    std::remove("p2.txt");
+
+}
+
+// Test error upon invalid dominance coefficient standard deviation
+BOOST_AUTO_TEST_CASE(readInvalidDomCoeff)
+{
+
+    // Write a file with invalid mutational dominance coefficient standard deviation
+    tst::write("p1.txt", "sddomcoeffs -0.5\n");
+    tst::write("p2.txt", "sddomcoeffs 10 10\n");
+
+    // Check
+    tst::checkError([&]() { Parameters pars("p1.txt"); }, "Parameter sddomcoeffs must be positive in line 1 of file p1.txt");
+    tst::checkError([&]() { Parameters pars("p2.txt"); }, "Too many values for parameter sddomcoeffs in line 1 of file p2.txt");
 
     // Remove files
     std::remove("p1.txt");
@@ -194,12 +216,12 @@ BOOST_AUTO_TEST_CASE(readInvalidWeight)
 {
 
     // Write a file with invalid mutational interaction weight standard deviation
-    tst::write("p1.txt", "weight -0.5\n");
-    tst::write("p2.txt", "weight 10 10\n");
+    tst::write("p1.txt", "sdweights -0.5\n");
+    tst::write("p2.txt", "sdweights 10 10\n");
 
     // Check
-    tst::checkError([&]() { Parameters pars("p1.txt"); }, "Parameter weight must be positive in line 1 of file p1.txt");
-    tst::checkError([&]() { Parameters pars("p2.txt"); }, "Too many values for parameter weight in line 1 of file p2.txt");
+    tst::checkError([&]() { Parameters pars("p1.txt"); }, "Parameter sdweights must be positive in line 1 of file p1.txt");
+    tst::checkError([&]() { Parameters pars("p2.txt"); }, "Too many values for parameter sdweights in line 1 of file p2.txt");
 
     // Remove files
     std::remove("p1.txt");
@@ -259,14 +281,14 @@ BOOST_AUTO_TEST_CASE(readInvalidNEdgesPerTrait)
 }
 
 // Test error upon invalid skew parameter
-BOOST_AUTO_TEST_CASE(readInvalidSkews)
+BOOST_AUTO_TEST_CASE(readInvalidSkew)
 {
 
     // Write a file with invalid skew parameters
-    tst::write("p1.txt", "ntraits 3\nskews 0.5 1.0 1.5 2.0\n");
+    tst::write("p1.txt", "ntraits 3\nskew 0.5 1.0 1.5 2.0\n");
 
     // Check
-    tst::checkError([&]() { Parameters pars("p1.txt"); }, "Too many values for parameter skews in line 2 of file p1.txt");
+    tst::checkError([&]() { Parameters pars("p1.txt"); }, "Too many values for parameter skew in line 2 of file p1.txt");
 
     // Remove files
     std::remove("p1.txt");
@@ -405,6 +427,24 @@ BOOST_AUTO_TEST_CASE(readInvalidImport)
 
 }
 
+// Test error upon invalid standardization flag
+BOOST_AUTO_TEST_CASE(readInvalidStandard)
+{
+
+    // Write a file with invalid standardization flag
+    tst::write("p1.txt", "standard -1\n");
+    tst::write("p2.txt", "standard 1 1\n");
+
+    // Check
+    tst::checkError([&]() { Parameters pars("p1.txt"); }, "Invalid value type for parameter standard in line 1 of file p1.txt");
+    tst::checkError([&]() { Parameters pars("p2.txt"); }, "Too many values for parameter standard in line 1 of file p2.txt");
+
+    // Remove files
+    std::remove("p1.txt");
+    std::remove("p2.txt");
+
+}
+
 // Test error upon invalid architecture loading flag
 BOOST_AUTO_TEST_CASE(readInvalidLoadArch)
 {
@@ -500,7 +540,7 @@ BOOST_AUTO_TEST_CASE(readTooFewEdgesGivenLoci)
 {
 
     // Write parameter file
-    tst::write("p1.txt", "ntraits 3\nnlocipertrait 3 3 3\nnedgespertrait 1 0 0\nskews 1 1 1\nepistasis 1 1 1\ndominance 1 1 1\nenvnoise 1 1 1\n");
+    tst::write("p1.txt", "ntraits 3\nnlocipertrait 3 3 3\nnedgespertrait 1 0 0\nskew 1 1 1\nepistasis 1 1 1\ndominance 1 1 1\nenvnoise 1 1 1\n");
 
     // Check error
     tst::checkError([&]() { Parameters pars("p1.txt"); }, "Not enough edges to connect all loci for trait 1 in file p1.txt");
@@ -515,7 +555,7 @@ BOOST_AUTO_TEST_CASE(readTooManyEdgesGivenLoci)
 {
 
     // Write parameter file
-    tst::write("p1.txt", "ntraits 3\nnlocipertrait 3 3 3\nnedgespertrait 5 0 0\nskews 1 1 1\nepistasis 1 1 1\ndominance 1 1 1\nenvnoise 1 1 1\n");
+    tst::write("p1.txt", "ntraits 3\nnlocipertrait 3 3 3\nnedgespertrait 5 0 0\nskew 1 1 1\nepistasis 1 1 1\ndominance 1 1 1\nenvnoise 1 1 1\n");
 
     // Check error
     tst::checkError([&]() { Parameters pars("p1.txt"); }, "Too many edges for the number of loci for trait 1 in file p1.txt");

@@ -41,11 +41,12 @@ nrepl 1
 popsize 100
 ntraits 3
 mutation 0.2
-effect 0.1
-weight 0.1
+sdeffect 0.1
+sddomcoeffs 0.3
+sdweight 0.1
 nlocipertrait 100 100 100
 nedgespertrait 1000 1000 1000
-skews 1 1 1
+skew 1 1 1
 epistasis 0.5 0.5 0.5
 dominance 0.3 0.3 0.3
 envnoise 0.2 0.2 0.2
@@ -53,6 +54,7 @@ sampling 1
 ratio 0.25
 seed 12345
 import 0
+standard 0
 loadarch 0
 savearch 1
 savepars 1

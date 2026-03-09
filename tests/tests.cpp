@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(useCaseOutputFilesBinary) {
     doMain({"program", "parameters.txt"});
 
     // Read binary alleles into encoded decimal numbers
-    std::vector<double> alleles = tst::readbin("alleles.dat");
+    std::vector<std::uint64_t> alleles = tst::readbin("alleles.dat");
 
     // Extract all the bits
     std::bitset<64u> bits(alleles[0u]);
@@ -294,7 +294,7 @@ BOOST_AUTO_TEST_CASE(useCaseWithMultipleTraits) {
     content << "ntraits 3\n";
     content << "nlocipertrait 9 9 7\n";
     content << "nedgespertrait 9 9 9\n";
-    content << "skews 1 1 1\n";
+    content << "skew 1 1 1\n";
     content << "epistasis 0.1 0.1 0.1\n";
     content << "dominance 0.4 0.4 0.4\n";
     content << "envnoise 0.7 0.7 0.7\n";
@@ -573,7 +573,7 @@ BOOST_AUTO_TEST_CASE(abuseSuppliedArchitectureWithDifferentNumberOfTraits) {
     doMain({"program", "parameters.txt"});
 
     // Write a parameter file with different number of traits
-    tst::write("parameters.txt", "loadarch 1\nntraits 2\nnlocipertrait 3 3\nnedgespertrait 3 3\nskews 1 1\nepistasis 0.1 0.1\ndominance 0.4 0.4\nenvnoise 0.7 0.7");
+    tst::write("parameters.txt", "loadarch 1\nntraits 2\nnlocipertrait 3 3\nnedgespertrait 3 3\nskew 1 1\nepistasis 0.1 0.1\ndominance 0.4 0.4\nenvnoise 0.7 0.7");
 
     // Check error
     BOOST_CHECK_THROW(doMain({"program", "parameters.txt"}), std::runtime_error);
@@ -792,7 +792,7 @@ BOOST_AUTO_TEST_CASE(useCaseTraitValueCalculation) {
     content << "ntraits 1\n";
     content << "nlocipertrait 3\n";
     content << "nedgespertrait 0\n";
-    content << "skews 0\n";
+    content << "skew 0\n";
     content << "epistasis 0\n";
     content << "dominance 0\n";
     content << "envnoise 0\n";
@@ -806,7 +806,7 @@ BOOST_AUTO_TEST_CASE(useCaseTraitValueCalculation) {
     arch << "ntraits 1\n";
     arch << "traitids 1 1 1\n";
     arch << "effects 0.3 0.4 -0.1\n";
-    arch << "dominances 0 0 0\n";
+    arch << "domcoeffs 0 0 0\n";
     tst::write("architecture.txt", arch.str());
 
     // Effect sizes as numbers
@@ -875,7 +875,7 @@ BOOST_AUTO_TEST_CASE(useCaseTraitValueCalculationWithDominance) {
     content << "ntraits 1\n";
     content << "nlocipertrait 3\n";
     content << "nedgespertrait 0\n";
-    content << "skews 0\n";
+    content << "skew 0\n";
     content << "epistasis 0\n";
     content << "dominance 1\n";
     content << "envnoise 0\n";
@@ -889,14 +889,14 @@ BOOST_AUTO_TEST_CASE(useCaseTraitValueCalculationWithDominance) {
     arch << "ntraits 1\n";
     arch << "traitids 1 1 1\n";
     arch << "effects 0.3 0.4 -0.1\n";
-    arch << "dominances 0.5 0.5 0.5\n";
+    arch << "domcoeffs 0.5 0.5 0.5\n";
     tst::write("architecture.txt", arch.str());
 
     // Effect sizes as numbers
     const std::vector<double> effects = {0.3, 0.4, -0.1};
 
     // Dominance coefficients as numbers
-    const std::vector<double> dominances = {0.5, 0.5, 0.5};
+    const std::vector<double> domcoeffs = {0.5, 0.5, 0.5};
 
     // Run the simulation
     doMain({"program", "parameters.txt"});
@@ -927,7 +927,7 @@ BOOST_AUTO_TEST_CASE(useCaseTraitValueCalculationWithDominance) {
             double value = genotypes[k] - 1.0;
 
             // Add dominance deviation for heterozygotes
-            if (value == 0.0)  value += dominances[j];
+            if (value == 0.0)  value += domcoeffs[j];
 
             // Update individual phenotype
             trait += value * effects[j];
@@ -967,7 +967,7 @@ BOOST_AUTO_TEST_CASE(useCaseTraitValueCalculationWithEpistasis) {
     content << "ntraits 1\n";
     content << "nlocipertrait 3\n";
     content << "nedgespertrait 3\n";
-    content << "skews 0\n";
+    content << "skew 0\n";
     content << "epistasis 0.1\n";
     content << "dominance 0\n";
     content << "envnoise 0\n";
@@ -981,7 +981,7 @@ BOOST_AUTO_TEST_CASE(useCaseTraitValueCalculationWithEpistasis) {
     arch << "ntraits 1\n";
     arch << "traitids 1 1 1\n";
     arch << "effects 0.3 0.4 -0.1\n";
-    arch << "dominances 0 0 0\n";
+    arch << "domcoeffs 0 0 0\n";
     arch << "from 1 2 3\n";
     arch << "to 2 3 1\n";
     arch << "weights 0.1 0.1 0.1\n";
@@ -1062,7 +1062,7 @@ BOOST_AUTO_TEST_CASE(useCaseTraitValueCalculationWithEpistasisAndDominance) {
     content << "ntraits 1\n";
     content << "nlocipertrait 3\n";
     content << "nedgespertrait 3\n";
-    content << "skews 0\n";
+    content << "skew 0\n";
     content << "epistasis 0.1\n";
     content << "dominance 1\n";
     content << "envnoise 0\n";
@@ -1076,7 +1076,7 @@ BOOST_AUTO_TEST_CASE(useCaseTraitValueCalculationWithEpistasisAndDominance) {
     arch << "ntraits 1\n";
     arch << "traitids 1 1 1\n";
     arch << "effects 0.3 0.4 -0.1\n";
-    arch << "dominances 0.2 0.2 0.2\n";
+    arch << "domcoeffs 0.2 0.2 0.2\n";
     arch << "from 1 2 3\n";
     arch << "to 2 3 1\n";
     arch << "weights 0.1 0.1 0.1\n";
@@ -1085,7 +1085,7 @@ BOOST_AUTO_TEST_CASE(useCaseTraitValueCalculationWithEpistasisAndDominance) {
     // Key values as numbers
     std::vector<double> effects = {0.3, 0.4, -0.1};
     std::vector<double> weights = {0.1, 0.1, 0.1};
-    std::vector<double> dominances = {0.2, 0.2, 0.2};
+    std::vector<double> domcoeffs = {0.2, 0.2, 0.2};
 
     // Run the simulation
     doMain({"program", "parameters.txt"});
@@ -1116,7 +1116,7 @@ BOOST_AUTO_TEST_CASE(useCaseTraitValueCalculationWithEpistasisAndDominance) {
             double value = genotypes[k] - 1.0;
 
             // Add dominance deviation for heterozygotes
-            if (value == 0.0) value += dominances[j];
+            if (value == 0.0) value += domcoeffs[j];
             
             // Update individual phenotype
             trait += value * effects[j] * 0.9;
@@ -1132,9 +1132,9 @@ BOOST_AUTO_TEST_CASE(useCaseTraitValueCalculationWithEpistasisAndDominance) {
         double exp2 = (genotypes[i * 3u + 2u] - 1.0);
 
         // Add dominance to heterozygotes
-        exp0 += (exp0 == 0.0) * dominances[0u];
-        exp1 += (exp1 == 0.0) * dominances[1u];
-        exp2 += (exp2 == 0.0) * dominances[2u];
+        exp0 += (exp0 == 0.0) * domcoeffs[0u];
+        exp1 += (exp1 == 0.0) * domcoeffs[1u];
+        exp2 += (exp2 == 0.0) * domcoeffs[2u];
 
         // Epistatic contributions
         const double edge01 = weights[0u] * exp0 * exp1;

@@ -1147,9 +1147,6 @@ BOOST_AUTO_TEST_CASE(useCaseTraitValueCalculationWithEpistasisAndDominance) {
         // If no match...
         if (fabs(trait - traits[i]) > 1e-6) {
 
-            // TOREMOVE
-            std::cout << "Trait value mismatch for individual " << i << ": expected " << trait << ", got " << traits[i] << std::endl;
-
             // Exit
             iswrong = true;
             break;

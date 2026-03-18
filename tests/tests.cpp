@@ -789,6 +789,7 @@ BOOST_AUTO_TEST_CASE(useCaseTraitValueCalculation) {
 
     // Write a parameter file with one trait and known architecture
     std::ostringstream content;
+    content << "mutation 0.5\n";
     content << "ntraits 1\n";
     content << "nlocipertrait 3\n";
     content << "nedgespertrait 0\n";
@@ -846,7 +847,7 @@ BOOST_AUTO_TEST_CASE(useCaseTraitValueCalculation) {
         }
         
         // If no match...
-        if (value != traits[i]) {
+        if (fabs(value - traits[i]) > 1e-9) {
 
             // Exit
             iswrong = true;
@@ -872,6 +873,7 @@ BOOST_AUTO_TEST_CASE(useCaseTraitValueCalculationWithDominance) {
 
     // Write a parameter file with one trait and known architecture
     std::ostringstream content;
+    content << "mutation 0.5\n";
     content << "ntraits 1\n";
     content << "nlocipertrait 3\n";
     content << "nedgespertrait 0\n";
@@ -938,7 +940,7 @@ BOOST_AUTO_TEST_CASE(useCaseTraitValueCalculationWithDominance) {
         }
         
         // If no match...
-        if (trait != traits[i]) {
+        if (fabs(trait - traits[i]) > 1e-9) {
 
             // Exit
             iswrong = true;
@@ -964,6 +966,7 @@ BOOST_AUTO_TEST_CASE(useCaseTraitValueCalculationWithEpistasis) {
 
     // Write a parameter file with one trait and known architecture
     std::ostringstream content;
+    content << "mutation 0.5\n";
     content << "ntraits 1\n";
     content << "nlocipertrait 3\n";
     content << "nedgespertrait 3\n";
@@ -1059,6 +1062,7 @@ BOOST_AUTO_TEST_CASE(useCaseTraitValueCalculationWithEpistasisAndDominance) {
 
     // Write a parameter file with one trait and known architecture
     std::ostringstream content;
+    content << "mutation 0.5\n";
     content << "ntraits 1\n";
     content << "nlocipertrait 3\n";
     content << "nedgespertrait 3\n";
@@ -1155,6 +1159,68 @@ BOOST_AUTO_TEST_CASE(useCaseTraitValueCalculationWithEpistasisAndDominance) {
     }
 
     // Make sure everything is fine
+    BOOST_CHECK(!iswrong);
+
+    // Cleanup
+    std::remove("parameters.txt");
+    std::remove("paramlog.txt");
+    std::remove("architecture.txt");
+    std::remove("genotypes.csv");
+    std::remove("traits.csv");
+
+}
+
+// Test output genotype file when no loci are mutated
+BOOST_AUTO_TEST_CASE(useCaseGenotypeOutputNoMutations) {
+
+    // Write a parameter file with mutation rate of zero
+    tst::write("parameters.txt", "mutation 0");
+
+    // Run the simulation
+    doMain({"program", "parameters.txt"});
+
+    // Read in the saved genotype file (skip header and identifier column)
+    const std::vector<double> genotypes = tst::readcsv("genotypes.csv", true, true);
+
+    // Check that all values are 0 (no mutations)
+    bool iswrong = false;
+    for (size_t i = 0u; i < genotypes.size(); ++i) {
+        if (genotypes[i] != 0.0) {
+            iswrong = true;
+            break;
+        }
+    }
+    BOOST_CHECK(!iswrong);
+
+    // Cleanup
+    std::remove("parameters.txt");
+    std::remove("paramlog.txt");
+    std::remove("architecture.txt");
+    std::remove("genotypes.csv");
+    std::remove("traits.csv");
+
+}
+
+// Test output genotype file when all loci are mutated
+BOOST_AUTO_TEST_CASE(useCaseGenotypeOutputAllMutations) {
+
+    // Write a parameter file with mutation rate of one
+    tst::write("parameters.txt", "mutation 1\nnlocipertrait 3");
+
+    // Run the simulation
+    doMain({"program", "parameters.txt"});
+
+    // Read in the saved genotype file (skip header and identifier column)
+    const std::vector<double> genotypes = tst::readcsv("genotypes.csv", true, true);
+
+    // Check that all values are 2 (fully mutated)
+    bool iswrong = false;
+    for (size_t i = 0u; i < genotypes.size(); ++i) {
+        if (genotypes[i] != 2.0) {
+            iswrong = true;
+            break;
+        }
+    }
     BOOST_CHECK(!iswrong);
 
     // Cleanup

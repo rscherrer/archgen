@@ -459,8 +459,8 @@ void stf::saveAlleles(std::vector<std::bitset<64u> > &alleles, const size_t &pop
     // Total number of alleles in the population
     const size_t N = popsize * nloci * 2u;
 
-    // Make sure that the trailing bits are zeros
-    for (size_t i = 0u; i < N % n; ++i)
+    // Make sure only unused trailing bits are zeros
+    for (size_t i = N % n; i < n; ++i)
         alleles.back().reset(i);
 
     // Create output file stream
@@ -520,8 +520,8 @@ void stf::saveAlleles(std::vector<std::bitset<64u> > &alleles, const size_t &pop
             // Write individual identifier to file
             if (i % nloci == 0u) file << i / nloci + 1u << ',';
 
-            // Find the two haplotypes in the bitsets
-            const size_t j = i / 2u;
+            // Find the two alleles for this diploid locus
+            const size_t j = 2u * i;
             const size_t k = j + 1u;
 
             // Extract alleles

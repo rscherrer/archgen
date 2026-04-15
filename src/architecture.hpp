@@ -25,6 +25,7 @@ struct Architecture {
     void test(const Parameters&) const;
     void check() const;
     void save(const std::string&) const;
+    void update();
 
     // Internal functions
     void checkinternal() const;
@@ -47,6 +48,9 @@ struct Architecture {
     // Internals
     std::vector<size_t> nlocipertrait;
     std::vector<size_t> nedgespertrait;
+
+    // Sample variances per trait
+    std::vector<double> variances;
 
 };
 

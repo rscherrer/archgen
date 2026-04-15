@@ -5,7 +5,10 @@
 
 #include "testutils.hpp"
 #include "../src/parameters.hpp"
+#include "../src/architecture.hpp"
 #include <boost/test/unit_test.hpp>
+
+#include <cmath>
 
 // Test that parameters can be created
 BOOST_AUTO_TEST_CASE(parametersCreated) {
@@ -39,6 +42,7 @@ BOOST_AUTO_TEST_CASE(readParameters)
     content << "epistasis 0.1 0.2 0.3\n";
     content << "dominance 0.4 0.5 0.6\n";
     content << "envnoise 0.7 0.8 0.9\n";
+    content << "heritability 0.3 0.4 0.5\n";
     content << "sampling 2\n";
     content << "ratio 0.25\n";
     content << "seed 12345\n";
@@ -601,5 +605,96 @@ BOOST_AUTO_TEST_CASE(errorWhenSavingParameters) {
         pars.save("");
 
     }, "Unable to open file ");
+
+}
+
+// Test that environmental variance conditioning works
+BOOST_AUTO_TEST_CASE(conditioningWorks) {
+
+    // Create parameters
+    Parameters pars;
+
+    // Modify
+    pars.ntraits = 1u;
+    pars.sdeffects = 0.5;
+    pars.nlocipertrait = {10u};
+    pars.heritability = {0.3};
+    pars.conditioned = true;
+
+    // Architecture
+    Architecture arch;
+    arch.generate(pars);
+
+    // Condition
+    pars.condition(arch);
+
+    // Extract
+    const size_t n = pars.nlocipertrait[0u];
+    const double v = arch.variance[0u];
+    const double h2 = pars.heritability[0u];
+
+    // Target value
+    const double envnoise = sqrt(n * v * (1.0 - h2) / (2.0 * h2));
+
+    // Check
+    BOOST_CHECK_EQUAL(pars.envnoise[0u], envnoise);
+
+}
+
+// Test that no environmental noise if full heritability
+BOOST_AUTO_TEST_CASE(conditioningFullHeritability) {
+
+    // Create parameters
+    Parameters pars;
+
+    // Modify
+    pars.ntraits = 1u;
+    pars.sdeffects = 0.5;
+    pars.nlocipertrait = {10u};
+    pars.heritability = {1.0};
+    pars.conditioned = true;
+
+    // Architecture
+    Architecture arch;
+    arch.generate(pars);
+
+    // Condition
+    pars.condition(arch);
+
+    // Check that envnoise is 0
+    BOOST_CHECK_EQUAL(pars.envnoise[0u], 0.0);
+
+}
+
+// Test upper bound of environmental noise when zero heritability
+BOOST_AUTO_TEST_CASE(conditioningZeroHeritability) {
+
+    // Create parameters
+    Parameters pars;
+
+    // Modify
+    pars.ntraits = 1u;
+    pars.sdeffects = 0.5;
+    pars.nlocipertrait = {10u};
+    pars.heritability = {0.0};
+    pars.conditioned = true;
+
+    // Architecture
+    Architecture arch;
+    arch.generate(pars);
+
+    // Condition
+    pars.condition(arch);
+
+    // Extract
+    const size_t n = pars.nlocipertrait[0u];
+    const double v = arch.variance[0u];
+    const double h2 = 1e-8;
+
+    // Target value
+    const double envnoise = sqrt(n * v * (1.0 - h2) / (2.0 * h2));
+
+    // Check
+    BOOST_CHECK_EQUAL(pars.envnoise[0u], envnoise);
 
 }

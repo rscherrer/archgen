@@ -50,7 +50,7 @@ struct Architecture {
     std::vector<size_t> nedgespertrait;
 
     // Sample variances per trait
-    std::vector<double> variances;
+    std::vector<double> variance;
 
 };
 

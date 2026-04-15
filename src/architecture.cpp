@@ -19,7 +19,7 @@ Architecture::Architecture(const std::string& archfile) :
     weights(nedges, 0.0),
     nlocipertrait(ntraits, nloci),
     nedgespertrait(ntraits, nedges),
-    variances(ntraits, 0.0)
+    variance(ntraits, 0.0)
 {
 
     // archfile: (optional) name of the file to read from
@@ -39,7 +39,6 @@ Architecture::Architecture(const std::string& archfile) :
 double getVariance(const size_t &n, const double &sum, const double &ssq) {
 
     // Check
-    assert(sum >= 0.0);
     assert(ssq >= 0.0);
 
     // Early exit
@@ -64,6 +63,7 @@ void Architecture::update() {
     // Prepare to count numbers of loci and edges per trait
     nlocipertrait.assign(ntraits, 0u);
     nedgespertrait.assign(ntraits, 0u);
+    variance.assign(ntraits, 0.0);
 
     // Prepare sums
     std::vector<double> sum(ntraits, 0.0);
@@ -91,7 +91,7 @@ void Architecture::update() {
 
     // For each trait...
     for (size_t j = 0u; j < ntraits; ++j)
-        variances[j] = getVariance(nlocipertrait[j], sum[j], ssq[j]);
+        variance[j] = getVariance(nlocipertrait[j], sum[j], ssq[j]);
 
 }
 
@@ -171,6 +171,7 @@ void Architecture::read(const std::string& filename) {
     // Prepare to count numbers of loci and edges per trait
     nlocipertrait.assign(ntraits, 0u);
     nedgespertrait.assign(ntraits, 0u);
+    variance.assign(ntraits, 0.0);
 
     // Prepare trackers to compute sample additive variance
     std::vector<double> sum(ntraits, 0.0);
@@ -200,7 +201,7 @@ void Architecture::read(const std::string& filename) {
 
     // For each trait...
     for (size_t j = 0u; j < ntraits; ++j)
-        variances[j] = getVariance(nlocipertrait[j], sum[j], ssq[j]);
+        variance[j] = getVariance(nlocipertrait[j], sum[j], ssq[j]);
 
     // For each edge...
     for (size_t i = 0u; i < nedges; ++i) {
@@ -261,6 +262,7 @@ void Architecture::generate(const Parameters &pars) {
     ntraits = pars.ntraits;
     nlocipertrait = pars.nlocipertrait;
     nedgespertrait = pars.nedgespertrait;
+    variance.assign(ntraits, 0.0);
 
     // Reset
     traitids.resize(0u);
@@ -349,7 +351,7 @@ void Architecture::generate(const Parameters &pars) {
         indices[j].reserve(nlocipertrait[j]);
 
         // Compute sample variance in additive effects
-        variances[j] = getVariance(nlocipertrait[j], sum[j], ssq[j]);
+        variance[j] = getVariance(nlocipertrait[j], sum[j], ssq[j]);
 
     }
 

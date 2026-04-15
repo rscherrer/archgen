@@ -31,11 +31,13 @@ Parameters::Parameters(const std::string& filename) :
     epistasis(ntraits, 0.0),
     dominance(ntraits, 0.0),
     envnoise(ntraits, 0.0),
+    heritability(ntraits, 1.0),
     sampling(0u),
     ratio(0.25),
     seed(clockseed()),
     import(false),
     standard(false),
+    conditioned(false),
     loadarch(false),
     savearch(true),
     savepars(true),
@@ -68,7 +70,47 @@ void Parameters::update() {
     // Count
     for (size_t n : nlocipertrait) nloci += n;
     for (size_t n : nedgespertrait) nedges += n;
+            
+}
 
+// Function to calculate needed environmental variance based on heritability
+double getVarE(const size_t &n, const double &v, double h2) {
+
+    // n: number of loci affecting the trait
+    // v: sample variance of effect sizes of loci affecting the trait
+    // h2: heritability of the trait
+
+    // Early exit
+    if (h2 == 1.0) return 0.0;
+
+    // Lower bound to avoid problems
+    if (h2 == 0.0) h2 = 1e-8;
+
+    // Expected environmental variance
+    return n * v * (1.0 - h2) / (2.0 * h2);
+
+}
+
+// Function to condition environmental noise on heritability
+void Parameters::condition(const Architecture &arch) {
+
+    // arch: genetic architecture
+
+    // For each trait...
+    for (size_t j = 0u; j < ntraits; ++j) {
+
+        // Extract
+        const size_t n = nlocipertrait[j];
+        const double var = arch.variance[j];
+        const double h2 = heritability[j];
+
+        // Update environmental noise
+        envnoise[j] = sqrt(getVarE(n, var, h2));
+
+        // Check
+        assert(envnoise[j] >= 0.0);
+
+    }
 }
 
 // Function to read parameters from a file
@@ -115,11 +157,13 @@ void Parameters::read(const std::string &filename) {
         else if (name == "epistasis") reader.readvalues<double>(epistasis, ntraits, chk::proportion<double>);
         else if (name == "dominance") reader.readvalues<double>(dominance, ntraits, chk::positive<double>);
         else if (name == "envnoise") reader.readvalues<double>(envnoise, ntraits, chk::positive<double>);
+        else if (name == "heritability") reader.readvalues<double>(heritability, ntraits, chk::proportion<double>);
         else if (name == "sampling") reader.readvalue<size_t>(sampling, chk::zerotothree<size_t>);
         else if (name == "ratio") reader.readvalue<double>(ratio, chk::proportion<double>);
         else if (name == "seed") reader.readvalue<size_t>(seed);
         else if (name == "import") reader.readvalue<bool>(import);
         else if (name == "standard") reader.readvalue<bool>(standard);
+        else if (name == "conditioned") reader.readvalue<bool>(conditioned);
         else if (name == "loadarch") reader.readvalue<bool>(loadarch);
         else if (name == "savearch") reader.readvalue<bool>(savearch);
         else if (name == "savepars") reader.readvalue<bool>(savepars);
@@ -225,6 +269,7 @@ void Parameters::check() const {
     assert(epistasis.size() == ntraits);
     assert(dominance.size() == ntraits);
     assert(envnoise.size() == ntraits);
+    assert(heritability.size() == ntraits);
     assert(sampling < 4u);
     assert(ratio >= 0.0 && ratio <= 1.0);
 
@@ -233,6 +278,7 @@ void Parameters::check() const {
     for (double x : epistasis) assert(x >= 0.0 && x <= 1.0);
     for (double x : dominance) assert(x >= 0.0);
     for (double x : envnoise) assert(x >= 0.0);
+    for (double x : heritability) assert(x >= 0.0 && x <= 1.0);
 
     // For each trait...
     for (size_t i = 0u; i < ntraits; ++i) {
@@ -280,12 +326,16 @@ void Parameters::save(const std::string &filename) const {
     file << '\n';
     file << "envnoise";
     for (double x : envnoise) file << ' ' << x;
-    file << '\n';    
+    file << '\n';
+    file << "heritability";
+    for (double x : heritability) file << ' ' << x;
+    file << '\n';
     file << "sampling " << sampling << '\n';
     file << "ratio " << ratio << '\n';
     file << "seed " << seed << '\n';
     file << "import " << import << '\n';
     file << "standard " << standard << '\n';
+    file << "conditioned " << conditioned << '\n';
     file << "loadarch " << loadarch << '\n';
     file << "savearch " << savearch << '\n';
     file << "savepars " << savepars << '\n';

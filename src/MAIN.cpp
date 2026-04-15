@@ -622,8 +622,11 @@ void doMain(const std::vector<std::string> &args) {
         // Current parameters
         Parameters parsk = pars;
 
-        // Override general parameters if needed
+        // Override parameters to ensure match
         parsk.override(arch);
+
+        // Condition environmental noise if needed
+        if (pars.conditioned) parsk.condition(arch);
 
         // Check
         arch.check();

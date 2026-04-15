@@ -557,7 +557,7 @@ BOOST_AUTO_TEST_CASE(sampleVarianceEffectSizes) {
     arch.update();
 
     // Check that the sample variance is properly computed
-    BOOST_CHECK_CLOSE(arch.variances[0u], 0.025, 1e-6);
+    BOOST_CHECK_CLOSE(arch.variance[0u], 0.025, 1e-6);
 
 }
 
@@ -579,7 +579,7 @@ BOOST_AUTO_TEST_CASE(sampleVarianceZero) {
     arch.update();
 
     // Check that the sample variance is close to zero (absolute tolerance)
-    BOOST_CHECK_SMALL(arch.variances[0u], 1e-6);
+    BOOST_CHECK_SMALL(arch.variance[0u], 1e-6);
 
 }
 
@@ -601,6 +601,6 @@ BOOST_AUTO_TEST_CASE(sampleVarianceOneLocus) {
     arch.update();
 
     // Check that the sample variance is properly computed
-    BOOST_CHECK_EQUAL(arch.variances[0u], 0.0);
+    BOOST_CHECK_EQUAL(arch.variance[0u], 0.0);
 
 }

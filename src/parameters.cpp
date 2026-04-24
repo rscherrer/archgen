@@ -73,44 +73,27 @@ void Parameters::update() {
             
 }
 
-// Function to calculate needed environmental variance based on heritability
-double getVarE(const size_t &n, const double &v, double h2) {
+// Function to condition environmental noise on heritability
+void Parameters::condition(const size_t &j, const double &varG, double h2) {
 
-    // n: number of loci affecting the trait
-    // v: sample variance of effect sizes of loci affecting the trait
-    // h2: heritability of the trait
+    // j: trait index
+    // varG: total genetic variance
+    // h2: heritability of the trait    
 
-    // Early exit
-    if (h2 == 1.0) return 0.0;
+    // Note: Whether h2 refers to narrow or broad-sense heritability depends
+    // on whether the simulation was run with additive genetics only (narrow), or
+    // with non-additive genetics as well (broad).
 
     // Lower bound to avoid problems
     if (h2 == 0.0) h2 = 1e-8;
 
-    // Expected environmental variance
-    return n * v * (1.0 - h2) / (2.0 * h2);
+    // Update environmental noise
+    envnoise[j] = varG * (1.0 - h2) / h2;
+    envnoise[j] = sqrt(envnoise[j]);
 
-}
+    // Check
+    assert(envnoise[j] >= 0.0);
 
-// Function to condition environmental noise on heritability
-void Parameters::condition(const Architecture &arch) {
-
-    // arch: genetic architecture
-
-    // For each trait...
-    for (size_t j = 0u; j < ntraits; ++j) {
-
-        // Extract
-        const size_t n = nlocipertrait[j];
-        const double var = arch.variance[j];
-        const double h2 = heritability[j];
-
-        // Update environmental noise
-        envnoise[j] = sqrt(getVarE(n, var, h2));
-
-        // Check
-        assert(envnoise[j] >= 0.0);
-
-    }
 }
 
 // Function to read parameters from a file

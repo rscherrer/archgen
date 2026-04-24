@@ -1,30 +1,15 @@
 ## Conditioning on heritability
 
-The program offers the possibility to supply genetic effects (locus effect sizes, dominance coefficients, interaction parameters, see [parameter](PARAMETERS.md) and [architecture](ARCHITECTURE.md) documentation) and environmental noise separately and independently of each other, but can also accommodate conditioning the environmental noise so as to reach a certain target (narrow-sense) heritability for each trait, given the additive effect sizes of the (generated or loaded) genetic architecture.
+The program offers the possibility to supply genetic effects (locus effect sizes, dominance coefficients, interaction parameters, see [parameter](PARAMETERS.md) and [architecture](ARCHITECTURE.md) documentation) and environmental noise separately and independently of each other, but can also accommodate conditioning the environmental noise so as to reach a certain target heritability for each trait, given the additive effect sizes of the (generated or loaded) genetic architecture.
+
+Here, heritability refers to the broad-sense heritability (narrow-sense in simulations with only additive genetic effects).
 
 This is done by setting the `conditioned` parameter to `1` (see [here](PARAMETERS.md)). If this is the case, the program will update the `envnoise` parameter to match the given `heritability` values given the generated architecture. If `conditioned` is `0`, the program will not update the `envnoise` parameter and the `heritability` values will be ignored.
 
-Conditioning on a given heritability should allow other programs to estimate more or less that heritability from the simulated data. This is only the case, however, if the data were simulated under purely additive genetics and environmental noise (no dominance, and no epistasis). If non-additive genetics are involved, there is no guarantee that the estimated heritability will match the target heritability, even in the absence of environmental noise.
+The conditioning is performed using the equation $V_\text{P} = V_\text{G} + V_\text{E} = V_\text{A} / H^2$, where $V_\text{P}$ is the phenotypic variance, $V_\text{G}$ is the genetic variance, $V_\text{E}$ is the environmental variance, $V_\text{A}$ is the additive genetic variance and $H^2$ is the broad-sense heritability. From this equation, we can derive the following formula for the environmental variance:
 
-### Derivations
+$$V_\text{E} = V_\text{G} / H^2 - V_\text{G}$$
 
-In the absence of correlation between genetic and environmental effects, the formula for narrow-sense heritability is:
+where $V_\text{G}$ is computed as a sample variance from the simulated data.
 
-$$h^2 = \frac{V_\text{A}}{V_\text{P}} = \frac{V_\text{A}}{V_\text{A} + V_\text{E}}$$
-
-where $V_\text{A}$ is the additive genetic variance and $V_\text{E}$ is the environmental variance, and $V_\text{P}$ is the phenotypic variance.
-Hence, the conditioning of environmental variance can be achieved using the formula
-
-$$V_\text{E} = \frac{V_\text{A} (1 - h^2)}{h^2}$$
-
-where $h^2$ is the target given in the `heritability` parameter array. In turn, the additive genetic variance $V_\text{A}$ is itself calculated as
-
-$$V_\text{A} = \frac{n \, \sigma^2}{2}$$
-
-where $n$ is the number of loci affecting the trait and $\sigma^2$ is the variance of the distribution of additive effect sizes across loci. This is because the additive genetic value of each individual can be considered a sum of $2n$ independent (diploid) allelic contributions, where each allele's effect is drawn from a distribution with standard deviation half of the standard deviation of effect sizes given as `sdeffects` in the [parameters](PARAMETERS.md) (the halving is because effect sizes represent contributions of homozygous genotypes). It follows from this that the variance of the sum of $2n$ contributions with variance $\sigma^2 / 4$ is $2n \times \sigma^2 / 4 = n \, \sigma^2 / 2$.
-
-Of course, this is making the simplifying assumption that all allelic contributions are independent from each other, while in reality alleles from the same locus will have the same absolute effect size, but this simplification should hopefully be reasonable for a large number of loci.
-
-### Theoretical vs realized additive variance
-
-When `conditioned` is `1`, the standard deviation in additive effect sizes $\sigma$ is calculated as the unbiased standard deviation of the realized array of additive effect sizes across loci (i.e. the `effects` provided or generated as part of the [architecture](ARCHITECTURE.md)), and not from the `sdeffects` parameter, which is used to sample these effect sizes in the first place when `loadarch` is `0` and the architecture must be randomly generated. The same conditioning as described above could in principle be done by using `sdeffects` in place of $\sigma$ (and allow picking the right values of `envnoise` outside of the program), but this usually results in estimated heritabilities that are further away from the target values, as they incorporate discrepancies generated by the sampling process (the standard deviation of `effects` will rarely be exactly `sdeffects`). Since this program is designed to be used for benchmarking empirical estimation methods, it is more desirable to produce estimated heritabilities as close as possible to the target values in null circumstances (i.e. no non-additive genetics).
+Note that conditioning will change the `envnoise` parameter internally, but the program will not save that updated value in the output parameter file `paramlog.txt`, which is saved if `savepars` is set to `1` (see [here](PARAMETERS.md)). This is because conditioning will cause `envnoise` to be updated for each replicate simulation separately, and we do not want to have to save one `paramlog.txt` file for each replicate (instead we only save one).

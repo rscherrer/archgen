@@ -18,8 +18,7 @@ Architecture::Architecture(const std::string& archfile) :
     to(nedges, 0u),
     weights(nedges, 0.0),
     nlocipertrait(ntraits, nloci),
-    nedgespertrait(ntraits, nedges),
-    variance(ntraits, 0.0)
+    nedgespertrait(ntraits, nedges)
 {
 
     // archfile: (optional) name of the file to read from
@@ -32,66 +31,6 @@ Architecture::Architecture(const std::string& archfile) :
 
     // Check
     check();
-
-}
-
-// Function to update the sample variance of additive effects for a given trait
-double getVariance(const size_t &n, const double &sum, const double &ssq) {
-
-    // Check
-    assert(ssq >= 0.0);
-
-    // Early exit
-    if (n == 1u) return 0.0;
-
-    // Compute sample variance in additive effects
-    const double v = (ssq - sum * sum / n) / (n - 1.0);
-
-    // Note: We use the unbiased estimator here to condition on heritability
-    // as precisely as possible.
-
-    // Check
-    assert(v >= 0.0);
-
-    return v;
-
-}
-
-// Function to update internal variables if needed
-void Architecture::update() {
-
-    // Prepare to count numbers of loci and edges per trait
-    nlocipertrait.assign(ntraits, 0u);
-    nedgespertrait.assign(ntraits, 0u);
-    variance.assign(ntraits, 0.0);
-
-    // Prepare sums
-    std::vector<double> sum(ntraits, 0.0);
-    std::vector<double> ssq(ntraits, 0.0);
-
-    // For each locus...
-    for (size_t i = 0u; i < nloci; ++i) {
-
-        // Count the number of loci per trait
-        ++nlocipertrait[traitids[i]];
-
-        // Update sums
-        sum[traitids[i]] += effects[i];
-        ssq[traitids[i]] += effects[i] * effects[i];
-
-    }
-
-    // For each edge...
-    for (size_t i = 0u; i < nedges; ++i) {
-
-        // Count the number of edges per trait
-        ++nedgespertrait[traitids[from[i]]];
-
-    }
-
-    // For each trait...
-    for (size_t j = 0u; j < ntraits; ++j)
-        variance[j] = getVariance(nlocipertrait[j], sum[j], ssq[j]);
 
 }
 
@@ -171,11 +110,6 @@ void Architecture::read(const std::string& filename) {
     // Prepare to count numbers of loci and edges per trait
     nlocipertrait.assign(ntraits, 0u);
     nedgespertrait.assign(ntraits, 0u);
-    variance.assign(ntraits, 0.0);
-
-    // Prepare trackers to compute sample additive variance
-    std::vector<double> sum(ntraits, 0.0);
-    std::vector<double> ssq(ntraits, 0.0);
 
     // For each locus...
     for (size_t i = 0u; i < nloci; ++i) {
@@ -193,15 +127,7 @@ void Architecture::read(const std::string& filename) {
         // Count the number of loci per trait
         ++nlocipertrait[traitids[i]];
 
-        // Track
-        sum[traitids[i]] += effects[i];
-        ssq[traitids[i]] += effects[i] * effects[i];
-
     }
-
-    // For each trait...
-    for (size_t j = 0u; j < ntraits; ++j)
-        variance[j] = getVariance(nlocipertrait[j], sum[j], ssq[j]);
 
     // For each edge...
     for (size_t i = 0u; i < nedges; ++i) {
@@ -262,7 +188,6 @@ void Architecture::generate(const Parameters &pars) {
     ntraits = pars.ntraits;
     nlocipertrait = pars.nlocipertrait;
     nedgespertrait = pars.nedgespertrait;
-    variance.assign(ntraits, 0.0);
 
     // Reset
     traitids.resize(0u);
@@ -286,10 +211,6 @@ void Architecture::generate(const Parameters &pars) {
     // Prepare square-rooted numbers of loci and edges per trait
     std::vector<double> snl(ntraits, 0.0);
     std::vector<double> sne(ntraits, 0.0);
-
-    // Prepare trackers to compute sample additive variance
-    std::vector<double> sum(ntraits, 0.0);
-    std::vector<double> ssq(ntraits, 0.0);
 
     // For each trait...
     for (size_t j = 0u; j < ntraits; ++j) {
@@ -329,10 +250,6 @@ void Architecture::generate(const Parameters &pars) {
         // Additive effect size of the locus on the trait
         effects.push_back(getnormal(rnd::rng) * (pars.standard ? 1.0 / snl[trait] : pars.sdeffects));
 
-        // Track
-        sum[trait] += effects.back();
-        ssq[trait] += effects.back() * effects.back();
-
         // Dominance effect of the locus on the trait
         domcoeffs.push_back(getnormal(rnd::rng) * (pars.standard ? 1.0 / snl[trait] : pars.sddomcoeffs));
 
@@ -349,9 +266,6 @@ void Architecture::generate(const Parameters &pars) {
 
         // Reserve memory for indices
         indices[j].reserve(nlocipertrait[j]);
-
-        // Compute sample variance in additive effects
-        variance[j] = getVariance(nlocipertrait[j], sum[j], ssq[j]);
 
     }
 

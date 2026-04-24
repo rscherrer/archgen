@@ -21,7 +21,7 @@ struct Parameters {
     // Functions
     void read(const std::string&);
     void override(const Architecture&);
-    void condition(const Architecture&);
+    void condition(const size_t&, const double&, double);
     void check() const;
     void save(const std::string&) const;
 

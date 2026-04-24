@@ -356,6 +356,27 @@ BOOST_AUTO_TEST_CASE(readInvalidEnvNoise)
 
 }
 
+// Test error upon invalid heritability parameter
+BOOST_AUTO_TEST_CASE(readInvalidHeritability)
+{
+
+    // Write a file with invalid heritability parameters
+    tst::write("p1.txt", "ntraits 3\nheritability 0.3 -0.4 0.5\n");
+    tst::write("p2.txt", "ntraits 3\nheritability 0.3 0.4 1.5\n");
+    tst::write("p3.txt", "ntraits 3\nheritability 0.3 0.4 0.5 0.6\n");
+
+    // Check
+    tst::checkError([&]() { Parameters pars("p1.txt"); }, "Parameter heritability must be between 0 and 1 in line 2 of file p1.txt");
+    tst::checkError([&]() { Parameters pars("p2.txt"); }, "Parameter heritability must be between 0 and 1 in line 2 of file p2.txt");
+    tst::checkError([&]() { Parameters pars("p3.txt"); }, "Too many values for parameter heritability in line 2 of file p3.txt");
+
+    // Remove files
+    std::remove("p1.txt");
+    std::remove("p2.txt");
+    std::remove("p3.txt");
+
+}
+
 // Test error upon invalid sampling mode
 BOOST_AUTO_TEST_CASE(readInvalidSampling)
 {
@@ -442,6 +463,24 @@ BOOST_AUTO_TEST_CASE(readInvalidStandard)
     // Check
     tst::checkError([&]() { Parameters pars("p1.txt"); }, "Invalid value type for parameter standard in line 1 of file p1.txt");
     tst::checkError([&]() { Parameters pars("p2.txt"); }, "Too many values for parameter standard in line 1 of file p2.txt");
+
+    // Remove files
+    std::remove("p1.txt");
+    std::remove("p2.txt");
+
+}
+
+// Test error upon invalid conditioning flag
+BOOST_AUTO_TEST_CASE(readInvalidConditioned)
+{
+
+    // Write a file with invalid conditioning flag
+    tst::write("p1.txt", "conditioned -1\n");
+    tst::write("p2.txt", "conditioned 1 1\n");
+
+    // Check
+    tst::checkError([&]() { Parameters pars("p1.txt"); }, "Invalid value type for parameter conditioned in line 1 of file p1.txt");
+    tst::checkError([&]() { Parameters pars("p2.txt"); }, "Too many values for parameter conditioned in line 1 of file p2.txt");
 
     // Remove files
     std::remove("p1.txt");
@@ -614,30 +653,11 @@ BOOST_AUTO_TEST_CASE(conditioningWorks) {
     // Create parameters
     Parameters pars;
 
-    // Modify
-    pars.ntraits = 1u;
-    pars.sdeffects = 0.5;
-    pars.nlocipertrait = {10u};
-    pars.heritability = {0.3};
-    pars.conditioned = true;
-
-    // Architecture
-    Architecture arch;
-    arch.generate(pars);
-
     // Condition
-    pars.condition(arch);
-
-    // Extract
-    const size_t n = pars.nlocipertrait[0u];
-    const double v = arch.variance[0u];
-    const double h2 = pars.heritability[0u];
-
-    // Target value
-    const double envnoise = sqrt(n * v * (1.0 - h2) / (2.0 * h2));
+    pars.condition(0u, 1.0, 0.5);
 
     // Check
-    BOOST_CHECK_EQUAL(pars.envnoise[0u], envnoise);
+    BOOST_CHECK_EQUAL(pars.envnoise[0u], 1.0);
 
 }
 
@@ -647,21 +667,10 @@ BOOST_AUTO_TEST_CASE(conditioningFullHeritability) {
     // Create parameters
     Parameters pars;
 
-    // Modify
-    pars.ntraits = 1u;
-    pars.sdeffects = 0.5;
-    pars.nlocipertrait = {10u};
-    pars.heritability = {1.0};
-    pars.conditioned = true;
-
-    // Architecture
-    Architecture arch;
-    arch.generate(pars);
-
     // Condition
-    pars.condition(arch);
+    pars.condition(0u, 1.0, 1.0);
 
-    // Check that envnoise is 0
+    // Check
     BOOST_CHECK_EQUAL(pars.envnoise[0u], 0.0);
 
 }
@@ -672,29 +681,10 @@ BOOST_AUTO_TEST_CASE(conditioningZeroHeritability) {
     // Create parameters
     Parameters pars;
 
-    // Modify
-    pars.ntraits = 1u;
-    pars.sdeffects = 0.5;
-    pars.nlocipertrait = {10u};
-    pars.heritability = {0.0};
-    pars.conditioned = true;
-
-    // Architecture
-    Architecture arch;
-    arch.generate(pars);
-
     // Condition
-    pars.condition(arch);
-
-    // Extract
-    const size_t n = pars.nlocipertrait[0u];
-    const double v = arch.variance[0u];
-    const double h2 = 1e-8;
-
-    // Target value
-    const double envnoise = sqrt(n * v * (1.0 - h2) / (2.0 * h2));
+    pars.condition(0u, 1.0, 0.0);
 
     // Check
-    BOOST_CHECK_EQUAL(pars.envnoise[0u], envnoise);
+    BOOST_CHECK_EQUAL(pars.envnoise[0u], sqrt(99999999.0));
 
 }

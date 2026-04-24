@@ -1232,3 +1232,21 @@ BOOST_AUTO_TEST_CASE(useCaseGenotypeOutputAllMutations) {
     std::remove("traits.csv");
 
 }
+
+// Test with variance conditioning
+BOOST_AUTO_TEST_CASE(useCaseVarianceConditioning) {
+
+    // Write a parameter file with variance conditioning
+    tst::write("parameters.txt", "conditioned 1");
+
+    // Check that the program runs
+    BOOST_CHECK_NO_THROW(doMain({"program", "parameters.txt"}));
+
+    // Cleanup
+    std::remove("parameters.txt");
+    std::remove("paramlog.txt");
+    std::remove("architecture.txt");
+    std::remove("genotypes.csv");
+    std::remove("traits.csv");
+
+}

@@ -21,6 +21,7 @@ struct Parameters {
     // Functions
     void read(const std::string&);
     void override(const Architecture&);
+    void condition(const size_t&, const double&, double);
     void check() const;
     void save(const std::string&) const;
 
@@ -42,11 +43,13 @@ struct Parameters {
     std::vector<double> epistasis;          // scaling parameters for the importance of interactions in trait development
     std::vector<double> dominance;          // scaling parameters for the importance of dominance effects in trait development
     std::vector<double> envnoise;           // scaling parameters for the importance of environmental effects in trait development
+    std::vector<double> heritability;       // heritability of each trait
     size_t sampling;                        // sampling mode for mutations
     double ratio;                           // density of mutations below which to shuffle only partially
     size_t seed;                            // random seed
     bool import;                            // whether to import the matrix of alleles from file
     bool standard;                          // whether to standardize generated architecture parameters
+    bool conditioned;                       // whether to condition environmental noise on heritability
     bool loadarch;                          // whether to read the genetic architecture from file
     bool savearch;                          // whether to save the genetic architecture to file
     bool savepars;                          // whether to save the parameters to file

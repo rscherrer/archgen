@@ -45,7 +45,7 @@ void Architecture::read(const std::string& filename) {
     // Open it
     reader.open();
 
-        // For each line in the file...
+    // For each line in the file...
     while (!reader.iseof()) {
 
         // Read a line

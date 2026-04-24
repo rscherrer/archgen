@@ -269,8 +269,31 @@ void gen::mutate(std::vector<std::bitset<64u> > &alleles, const double &mu, cons
     }
 }
 
+// Function to finalize sample variance calculation
+double getVariance(const size_t &n, const double &sum, const double &ssq) {
+
+    // n: number of values in the sample
+    // sum: sum of the values in the sample
+    // ssq: sum of squares of the values in the sample
+
+    // Check
+    assert(ssq >= 0.0);
+
+    // Early exit
+    if (n == 1u) return 0.0;
+
+    // Compute sample variance in additive effects
+    const double v = (ssq - sum * sum / n) / (n - 1.0);
+
+    // Check
+    assert(v >= 0.0);
+
+    return v;
+
+}
+
 // Function to convert the matrix of alleles into a vector of trait values
-std::vector<double> gen::develop(const std::vector<std::bitset<64u> > &alleles, const Parameters &pars, const Architecture &arch, const size_t &N) {
+std::vector<double> gen::develop(const std::vector<std::bitset<64u> > &alleles, Parameters &pars, const Architecture &arch, const size_t &N) {
 
     // alleles: vector of bitsets representing matrix of alleles
     // pars: general hyperparameters
@@ -365,6 +388,44 @@ std::vector<double> gen::develop(const std::vector<std::bitset<64u> > &alleles, 
 
         // Add to trait value
         traits[individual * arch.ntraits + traitid] += value;
+
+    }
+
+    // Prepare genetic variance for each trait
+    std::vector<double> varG(arch.ntraits, 0.0);
+
+    // If needed...
+    if (pars.conditioned) {
+
+        // Prepare sums and sums of squares
+        std::vector<double> sum(arch.ntraits, 0.0);
+        std::vector<double> ssq(arch.ntraits, 0.0);
+
+        // For each trait value in each individual...
+        for (size_t i = 0u; i < ttraits; ++i) {
+
+            // Which trait is concerned?
+            const size_t traitid = i % arch.ntraits;
+
+            // Update sums
+            sum[traitid] += traits[i];
+            ssq[traitid] += traits[i] * traits[i];
+
+        }
+
+        // For each trait...
+        for (size_t j = 0u; j < arch.ntraits; ++j) {
+
+            // Finalize sample variance calculation
+            varG[j] = getVariance(popsize, sum[j], ssq[j]);
+
+            // Use it to condition environmental noise
+            pars.condition(j, varG[j], pars.heritability[j]);
+            
+        }
+
+        // Message
+        std::cout << "Environmental noise conditioned on heritability\n";
 
     }
 
@@ -622,7 +683,7 @@ void doMain(const std::vector<std::string> &args) {
         // Current parameters
         Parameters parsk = pars;
 
-        // Override general parameters if needed
+        // Override parameters to ensure match
         parsk.override(arch);
 
         // Check
@@ -655,6 +716,10 @@ void doMain(const std::vector<std::string> &args) {
         // Develop genotypes into phenotypes
         const std::vector<double> traits = gen::develop(alleles, pars, arch, N);
 
+        // Note: At this point the environmental noise may have been
+        // updated in the parameter set if conditioning on heritability 
+        // was requested.
+
         // Output file name
         const std::string traitfile = addrepl("traits", "csv", k, pars.nrepl > 1u);
 
@@ -668,8 +733,8 @@ void doMain(const std::vector<std::string> &args) {
         // Save matrix of alleles if needed
         stf::saveAlleles(alleles, pars.popsize, pars.nloci, pars.binary ? allfile : genfile, pars.binary);
         
-        // Verbose if needed
-        if (pars.verbose) std::cout << "Population generated successfully\n";
+        // Message
+        std::cout << "Population generated successfully\n";
 
     }
 }

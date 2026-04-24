@@ -298,6 +298,7 @@ BOOST_AUTO_TEST_CASE(useCaseWithMultipleTraits) {
     content << "epistasis 0.1 0.1 0.1\n";
     content << "dominance 0.4 0.4 0.4\n";
     content << "envnoise 0.7 0.7 0.7\n";
+    content << "heritability 0.3 0.4 0.5\n";
     tst::write("parameters.txt", content.str());
 
     // Check that the program runs
@@ -573,7 +574,7 @@ BOOST_AUTO_TEST_CASE(abuseSuppliedArchitectureWithDifferentNumberOfTraits) {
     doMain({"program", "parameters.txt"});
 
     // Write a parameter file with different number of traits
-    tst::write("parameters.txt", "loadarch 1\nntraits 2\nnlocipertrait 3 3\nnedgespertrait 3 3\nskew 1 1\nepistasis 0.1 0.1\ndominance 0.4 0.4\nenvnoise 0.7 0.7");
+    tst::write("parameters.txt", "loadarch 1\nntraits 2\nnlocipertrait 3 3\nnedgespertrait 3 3\nskew 1 1\nepistasis 0.1 0.1\ndominance 0.4 0.4\nenvnoise 0.7 0.7\nheritability 0.3 0.4");
 
     // Check error
     BOOST_CHECK_THROW(doMain({"program", "parameters.txt"}), std::runtime_error);
@@ -1222,6 +1223,24 @@ BOOST_AUTO_TEST_CASE(useCaseGenotypeOutputAllMutations) {
         }
     }
     BOOST_CHECK(!iswrong);
+
+    // Cleanup
+    std::remove("parameters.txt");
+    std::remove("paramlog.txt");
+    std::remove("architecture.txt");
+    std::remove("genotypes.csv");
+    std::remove("traits.csv");
+
+}
+
+// Test with variance conditioning
+BOOST_AUTO_TEST_CASE(useCaseVarianceConditioning) {
+
+    // Write a parameter file with variance conditioning
+    tst::write("parameters.txt", "conditioned 1");
+
+    // Check that the program runs
+    BOOST_CHECK_NO_THROW(doMain({"program", "parameters.txt"}));
 
     // Cleanup
     std::remove("parameters.txt");

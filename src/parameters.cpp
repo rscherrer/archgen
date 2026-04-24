@@ -31,11 +31,13 @@ Parameters::Parameters(const std::string& filename) :
     epistasis(ntraits, 0.0),
     dominance(ntraits, 0.0),
     envnoise(ntraits, 0.0),
+    heritability(ntraits, 1.0),
     sampling(0u),
     ratio(0.25),
     seed(clockseed()),
     import(false),
     standard(false),
+    conditioned(false),
     loadarch(false),
     savearch(true),
     savepars(true),
@@ -68,6 +70,29 @@ void Parameters::update() {
     // Count
     for (size_t n : nlocipertrait) nloci += n;
     for (size_t n : nedgespertrait) nedges += n;
+            
+}
+
+// Function to condition environmental noise on heritability
+void Parameters::condition(const size_t &j, const double &varG, double h2) {
+
+    // j: trait index
+    // varG: total genetic variance
+    // h2: heritability of the trait    
+
+    // Note: Whether h2 refers to narrow or broad-sense heritability depends
+    // on whether the simulation was run with additive genetics only (narrow), or
+    // with non-additive genetics as well (broad).
+
+    // Lower bound to avoid problems
+    if (h2 == 0.0) h2 = 1e-8;
+
+    // Update environmental noise
+    envnoise[j] = varG * (1.0 - h2) / h2;
+    envnoise[j] = sqrt(envnoise[j]);
+
+    // Check
+    assert(envnoise[j] >= 0.0);
 
 }
 
@@ -115,11 +140,13 @@ void Parameters::read(const std::string &filename) {
         else if (name == "epistasis") reader.readvalues<double>(epistasis, ntraits, chk::proportion<double>);
         else if (name == "dominance") reader.readvalues<double>(dominance, ntraits, chk::positive<double>);
         else if (name == "envnoise") reader.readvalues<double>(envnoise, ntraits, chk::positive<double>);
+        else if (name == "heritability") reader.readvalues<double>(heritability, ntraits, chk::proportion<double>);
         else if (name == "sampling") reader.readvalue<size_t>(sampling, chk::zerotothree<size_t>);
         else if (name == "ratio") reader.readvalue<double>(ratio, chk::proportion<double>);
         else if (name == "seed") reader.readvalue<size_t>(seed);
         else if (name == "import") reader.readvalue<bool>(import);
         else if (name == "standard") reader.readvalue<bool>(standard);
+        else if (name == "conditioned") reader.readvalue<bool>(conditioned);
         else if (name == "loadarch") reader.readvalue<bool>(loadarch);
         else if (name == "savearch") reader.readvalue<bool>(savearch);
         else if (name == "savepars") reader.readvalue<bool>(savepars);
@@ -225,6 +252,7 @@ void Parameters::check() const {
     assert(epistasis.size() == ntraits);
     assert(dominance.size() == ntraits);
     assert(envnoise.size() == ntraits);
+    assert(heritability.size() == ntraits);
     assert(sampling < 4u);
     assert(ratio >= 0.0 && ratio <= 1.0);
 
@@ -233,6 +261,7 @@ void Parameters::check() const {
     for (double x : epistasis) assert(x >= 0.0 && x <= 1.0);
     for (double x : dominance) assert(x >= 0.0);
     for (double x : envnoise) assert(x >= 0.0);
+    for (double x : heritability) assert(x >= 0.0 && x <= 1.0);
 
     // For each trait...
     for (size_t i = 0u; i < ntraits; ++i) {
@@ -280,12 +309,16 @@ void Parameters::save(const std::string &filename) const {
     file << '\n';
     file << "envnoise";
     for (double x : envnoise) file << ' ' << x;
-    file << '\n';    
+    file << '\n';
+    file << "heritability";
+    for (double x : heritability) file << ' ' << x;
+    file << '\n';
     file << "sampling " << sampling << '\n';
     file << "ratio " << ratio << '\n';
     file << "seed " << seed << '\n';
     file << "import " << import << '\n';
     file << "standard " << standard << '\n';
+    file << "conditioned " << conditioned << '\n';
     file << "loadarch " << loadarch << '\n';
     file << "savearch " << savearch << '\n';
     file << "savepars " << savepars << '\n';

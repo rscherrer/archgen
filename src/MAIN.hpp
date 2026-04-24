@@ -32,7 +32,7 @@ namespace gen {
     void mutate(std::vector<std::bitset<64u> >&, const double&, const size_t&, const size_t&, const double& = 0.25);
 
     // Function to convert the matrix of alleles into a vector of trait values
-    std::vector<double> develop(const std::vector<std::bitset<64u> >&, const Parameters&, const Architecture&, const size_t&);
+    std::vector<double> develop(const std::vector<std::bitset<64u> >&, Parameters&, const Architecture&, const size_t&);
     
 }
 

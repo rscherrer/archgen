@@ -50,11 +50,13 @@ skew 1 1 1
 epistasis 0.5 0.5 0.5
 dominance 0.3 0.3 0.3
 envnoise 0.2 0.2 0.2
+heritability 1 1 1
 sampling 1
 ratio 0.25
 seed 12345
 import 0
 standard 0
+conditioned 0 
 loadarch 0
 savearch 1
 savepars 1
